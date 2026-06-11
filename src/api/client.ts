@@ -17,5 +17,10 @@ export async function api<T = unknown>(path: string, options: RequestOptions = {
   return res.json() as Promise<T>;
 }
 
-export const getHealth = () => api('/health');
+export type HealthResponse = {
+  status?: string;
+  message?: string;
+};
+
+export const getHealth = () => api<HealthResponse>('/health');
 export const assessRisk = (body: unknown) => api('/assess-risk', { method: 'POST', body: JSON.stringify(body) });

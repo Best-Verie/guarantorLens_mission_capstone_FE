@@ -10,7 +10,7 @@ const Home: React.FC = () => {
 
     try {
       const result = await getHealth();
-      setStatus(`Backed Responded: ${JSON.stringify(result?.status || 'No status field in response')}`);
+      setStatus(`Backend responded: ${result.status ?? 'No status field in response'}`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Backend health check failed');
     }
