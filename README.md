@@ -1,8 +1,6 @@
 # guarantorLens_mission_capstone_FE
 
-
-> A short one-line description of what this app does.
-
+A github repo for ALU final yeaar mission capstone frontend 
 Built with [React](https://react.dev), [Vite](https://vitejs.dev), and [Tailwind CSS](https://tailwindcss.com). Deployed on [Vercel](https://vercel.com).
 
 🔗 **Live demo:** https://guarantor-lens-mission-capstone-fe.vercel.app/
