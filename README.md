@@ -1,73 +1,140 @@
-# React + TypeScript + Vite
+# guarantorLens_mission_capstone_FE
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Currently, two official plugins are available:
+> A short one-line description of what this app does.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Built with [React](https://react.dev), [Vite](https://vitejs.dev), and [Tailwind CSS](https://tailwindcss.com). Deployed on [Vercel](https://vercel.com).
 
-## React Compiler
+🔗 **Live demo:** https://guarantor-lens-mission-capstone-fe.vercel.app/
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **React** — UI library
+- **Vite** — build tool & dev server
+- **Tailwind CSS** — utility-first styling
+- **Vercel** — hosting & deployment
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Prerequisites
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Make sure you have the following installed:
+
+- [Node.js](https://nodejs.org) (v18 or higher recommended)
+- npm (comes with Node) — or use `pnpm` / `yarn` if you prefer
+
+Check your versions:
+
+```bash
+node -v
+npm -v
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Running Locally
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/Best-Verie/guarantorLens_mission_capstone_FE.git
+   cd guarantorLens_mission_capstone_FE
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+
+   Copy the example file and fill in your values:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   > Note: With Vite, client-side env variables **must** be prefixed with `VITE_` (e.g. `VITE_API_URL`).
+
+4. **Start the dev server**
+
+   ```bash
+   npm run dev
+   ```
+
+   The app will be available at **http://localhost:5173**.
+
+---
+
+## Available Scripts
+
+| Command           | Description                                      |
+| ----------------- | ------------------------------------------------ |
+| `npm run dev`     | Start the local development server               |
+| `npm run build`   | Build the app for production (outputs to `dist/`)|
+| `npm run preview` | Preview the production build locally             |
+| `npm run lint`    | Run the linter (if configured)                   |
+
+---
+
+## Project Structure
+
 ```
+.
+├── public/             # Static assets served as-is
+├── src/
+│   ├── assets/         # Images, fonts, etc.
+│   ├── components/     # Reusable React components
+│   ├── pages/          # Page-level components
+│   ├── App.jsx         # Root component
+│   ├── main.jsx        # App entry point
+│   └── index.css       # Tailwind directives & global styles
+├── index.html          # HTML entry point
+├── tailwind.config.js  # Tailwind configuration
+├── vite.config.js      # Vite configuration
+└── package.json
+```
+
+---
+
+## Environment Variables
+
+| Variable        | Description                  | Required |
+| --------------- | ---------------------------- | -------- |
+| `VITE_API_URL`  | Base URL for the backend API | Yes      |
+
+
+---
+
+## Deployment (Vercel)
+
+This project is deployed automatically on Vercel.
+
+- **Production:** every push to the `main` branch triggers a production deploy.
+- **Preview:** every pull request gets its own preview deployment.
+
+### First-time setup
+
+1. Import the repository into [Vercel](https://vercel.com/new).
+2. Vercel auto-detects Vite — settings should be:
+   - **Framework Preset:** Vite
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+3. Add your environment variables under **Project Settings → Environment Variables**.
+4. Click **Deploy**.
+
+### Manual deploy via CLI (optional)
+
+```bash
+npm i -g vercel
+vercel          # deploy a preview
+vercel --prod   # deploy to production
+```
+
+
+## License
+
+[MIT](LICENSE) © Best Verie
