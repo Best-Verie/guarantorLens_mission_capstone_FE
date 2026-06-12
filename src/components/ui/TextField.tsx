@@ -39,8 +39,8 @@ export function TextField({
             "w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink",
             "placeholder:text-slate/60",
             "focus:border-brand focus:outline-2 focus:outline-offset-0 focus:outline-brand/30",
-            icon && "pl-10",
-            trailing && "pr-10",
+            icon ? "pl-10" : null,
+            trailing ? "pr-10" : null,
             className
           )}
           {...rest}
