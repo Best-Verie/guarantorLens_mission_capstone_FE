@@ -1,29 +1,44 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { AuthLayout } from "../components/auth/AuthLayout";
 import { TextField } from "../components/ui/TextField";
 import { Button } from "../components/ui/Button";
+import { Alert } from "../components/ui/Alert";
 import { LockIcon, EyeIcon, EyeOffIcon, CheckIcon } from "../components/icons";
+import { resetPassword } from "../api/auth";
+import { ApiError } from "../api/http";
 
 export default function ResetPassword() {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token") ?? "";
+
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [show, setShow] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const mismatch = confirm.length > 0 && confirm !== password;
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!token) {
+      setError("This reset link is missing its token. Request a new link.");
+      return;
+    }
     if (password.length < 8 || mismatch) return;
+    setError(null);
     setSubmitting(true);
-    // TODO: send the new password (with the token from the email link) to the backend.
-    // const token = new URLSearchParams(window.location.search).get("token");
-    // await api("/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password }) })
-    setSubmitting(false);
-    setDone(true);
+    try {
+      await resetPassword({ token, newPassword: password });
+      setDone(true);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const toggle = (
@@ -75,6 +90,14 @@ export default function ResetPassword() {
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {error && <Alert tone="error">{error}</Alert>}
+            {!token && (
+              <Alert tone="info">
+                Open this page from the link in your reset email. The link
+                carries the token needed to set a new password.
+              </Alert>
+            )}
+
             <TextField
               label="New password"
               type={show ? "text" : "password"}

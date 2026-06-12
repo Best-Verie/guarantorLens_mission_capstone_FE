@@ -1,34 +1,48 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/auth/AuthLayout";
 import { TextField } from "../components/ui/TextField";
 import { Select } from "../components/ui/Select";
 import { Button } from "../components/ui/Button";
 import { Checkbox } from "../components/ui/Checkbox";
+import { Alert } from "../components/ui/Alert";
 import { UserIcon, MailIcon, LockIcon } from "../components/icons";
+import { register } from "../api/auth";
+import type { Role } from "../api/auth";
+import { ApiError } from "../api/http";
+import { saveSession } from "../lib/session";
 
-const ROLES = [
+const ROLES: { value: Role; label: string }[] = [
   { value: "loan_officer", label: "Loan officer" },
   { value: "credit_staff", label: "Credit staff" },
   { value: "branch_manager", label: "Branch manager" },
 ];
 
 export default function SignUp() {
+  const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState(ROLES[0].value);
+  const [role, setRole] = useState<Role>(ROLES[0].value);
   const [password, setPassword] = useState("");
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!consent) return;
+    setError(null);
     setSubmitting(true);
-    // TODO: create the account against the backend, then redirect to sign in.
-    // e.g. await api("/auth/register", { method: "POST", body: JSON.stringify({ fullName, email, role, password }) })
-    setSubmitting(false);
+    try {
+      const res = await register({ fullName, email, role, password });
+      saveSession(res.access_token, res.user);
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -49,6 +63,8 @@ export default function SignUp() {
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {error && <Alert tone="error">{error}</Alert>}
+
         <TextField
           label="Full name"
           autoComplete="name"
@@ -74,7 +90,7 @@ export default function SignUp() {
           label="Role"
           options={ROLES}
           value={role}
-          onChange={(e) => setRole(e.target.value)}
+          onChange={(e) => setRole(e.target.value as Role)}
         />
 
         <TextField

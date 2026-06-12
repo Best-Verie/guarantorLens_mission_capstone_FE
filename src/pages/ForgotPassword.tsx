@@ -4,20 +4,33 @@ import { Link } from "react-router-dom";
 import { AuthLayout } from "../components/auth/AuthLayout";
 import { TextField } from "../components/ui/TextField";
 import { Button } from "../components/ui/Button";
+import { Alert } from "../components/ui/Alert";
 import { MailIcon, CheckIcon } from "../components/icons";
+import { forgotPassword } from "../api/auth";
+import { ApiError } from "../api/http";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // Populated only when the backend runs with DEBUG on, so the flow is testable
+  // before email delivery is wired up.
+  const [devToken, setDevToken] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError(null);
     setSubmitting(true);
-    // TODO: request a reset link from the backend.
-    // e.g. await api("/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) })
-    setSubmitting(false);
-    setSent(true);
+    try {
+      const res = await forgotPassword(email);
+      setDevToken(res.reset_token ?? null);
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -41,6 +54,20 @@ export default function ForgotPassword() {
             account, we have sent a link to reset your password. It can take a
             minute to arrive.
           </p>
+
+          {devToken && (
+            <div className="mt-4">
+              <Alert tone="info">
+                Testing mode: email is not wired up yet, so use this link.{" "}
+                <Link
+                  to={`/reset-password?token=${devToken}`}
+                  className="font-semibold underline"
+                >
+                  Reset your password
+                </Link>
+              </Alert>
+            </div>
+          )}
 
           <div className="mt-7 flex flex-col gap-3">
             <Button variant="secondary" block onClick={() => setSent(false)}>
@@ -76,6 +103,8 @@ export default function ForgotPassword() {
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {error && <Alert tone="error">{error}</Alert>}
+
             <TextField
               label="Work email"
               type="email"

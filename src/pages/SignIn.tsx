@@ -1,24 +1,37 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/auth/AuthLayout";
 import { TextField } from "../components/ui/TextField";
 import { Button } from "../components/ui/Button";
 import { Checkbox } from "../components/ui/Checkbox";
+import { Alert } from "../components/ui/Alert";
 import { MailIcon, LockIcon, EyeIcon, EyeOffIcon } from "../components/icons";
+import { login } from "../api/auth";
+import { ApiError } from "../api/http";
+import { saveSession } from "../lib/session";
 
 export default function SignIn() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError(null);
     setSubmitting(true);
-    // TODO: authenticate against the backend, then redirect to the dashboard.
-    // e.g. await api("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) })
-    setSubmitting(false);
+    try {
+      const res = await login({ email, password });
+      saveSession(res.access_token, res.user);
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -39,6 +52,8 @@ export default function SignIn() {
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {error && <Alert tone="error">{error}</Alert>}
+
         <TextField
           label="Work email"
           type="email"
