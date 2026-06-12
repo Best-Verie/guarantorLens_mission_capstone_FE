@@ -1,0 +1,127 @@
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
+import { AuthLayout } from "../components/auth/AuthLayout";
+import { TextField } from "../components/ui/TextField";
+import { Button } from "../components/ui/Button";
+import { LockIcon, EyeIcon, EyeOffIcon, CheckIcon } from "../components/icons";
+
+export default function ResetPassword() {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [show, setShow] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const mismatch = confirm.length > 0 && confirm !== password;
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (password.length < 8 || mismatch) return;
+    setSubmitting(true);
+    // TODO: send the new password (with the token from the email link) to the backend.
+    // const token = new URLSearchParams(window.location.search).get("token");
+    // await api("/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password }) })
+    setSubmitting(false);
+    setDone(true);
+  }
+
+  const toggle = (
+    <button
+      type="button"
+      onClick={() => setShow((s) => !s)}
+      className="flex h-7 w-7 items-center justify-center rounded-md text-slate text-[18px] hover:bg-slate-100"
+      aria-label={show ? "Hide password" : "Show password"}
+    >
+      {show ? <EyeOffIcon /> : <EyeIcon />}
+    </button>
+  );
+
+  return (
+    <AuthLayout
+      panelHeading="Set a new password."
+      panelSub="Choose a strong password you do not use anywhere else. Once it is saved you can sign in straight away."
+      points={[
+        "Use 8 or more characters",
+        "Mix letters and numbers",
+        "The reset link works only once",
+      ]}
+    >
+      {done ? (
+        <div>
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-accent-50 text-accent text-2xl">
+            <CheckIcon />
+          </div>
+          <h1 className="text-2xl font-bold text-ink">Password updated</h1>
+          <p className="mt-2 text-sm text-slate">
+            Your password has been changed. You can now sign in with your new
+            password.
+          </p>
+          <div className="mt-7">
+            <Link to="/login">
+              <Button variant="primary" block>
+                Go to sign in
+              </Button>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="mb-7">
+            <h1 className="text-2xl font-bold text-ink">Choose a new password</h1>
+            <p className="mt-1 text-sm text-slate">
+              Set the password for your GuarantorLens account.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <TextField
+              label="New password"
+              type={show ? "text" : "password"}
+              autoComplete="new-password"
+              placeholder="At least 8 characters"
+              icon={<LockIcon />}
+              trailing={toggle}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
+              hint="Use 8 or more characters with a mix of letters and numbers."
+              required
+            />
+
+            <TextField
+              label="Confirm new password"
+              type={show ? "text" : "password"}
+              autoComplete="new-password"
+              placeholder="Re-enter your password"
+              icon={<LockIcon />}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              required
+            />
+            {mismatch && (
+              <p className="-mt-2 text-xs font-medium text-red-600">
+                The two passwords do not match.
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              variant="primary"
+              block
+              disabled={submitting || password.length < 8 || mismatch}
+            >
+              {submitting ? "Saving..." : "Save new password"}
+            </Button>
+          </form>
+
+          <p className="mt-7 text-center text-sm text-slate">
+            <Link to="/login" className="font-semibold text-brand hover:underline">
+              Back to sign in
+            </Link>
+          </p>
+        </>
+      )}
+    </AuthLayout>
+  );
+}
