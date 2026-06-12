@@ -48,9 +48,8 @@ export default function Dashboard() {
 
         <div className="mt-8 rounded-xl border border-line bg-white p-6">
           <p className="text-sm text-slate">
-            Authentication is working. The portfolio dashboard, risk assessment,
-            watchlist, and network views come next and will live behind this
-            sign-in.
+            Sign in works. The dashboard, loan checks, watch list, and network
+            views come next, and they will sit behind this sign-in.
           </p>
         </div>
       </main>

@@ -76,7 +76,7 @@ export function AuthLayout({
         </div>
 
         <p className="relative mt-10 text-xs text-white/50">
-          Prototype for the BSc capstone. Figures and screens are illustrative.
+          A prototype for a student project. The numbers and screens are just examples.
         </p>
       </aside>
 

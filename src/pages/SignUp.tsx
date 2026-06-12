@@ -47,18 +47,18 @@ export default function SignUp() {
 
   return (
     <AuthLayout
-      panelHeading="Built for the people who make the lending call."
-      panelSub="Loan officers and credit staff get a network-aware risk score with the reasons behind it, drawn from the SACCO's own loan and guarantor records."
+      panelHeading="Made for the people who decide on loans."
+      panelSub="Loan officers and staff get a simple risk score with clear reasons, built from the SACCO's own loan and guarantor records."
       points={[
-        "One view of the borrower and their guarantor network",
-        "Flags for defaulted, over-committed, and high-default backers",
-        "Member data stays confidential and on the SACCO's terms",
+        "See the borrower and the people who back them in one place",
+        "Clear warnings when a guarantor looks risky",
+        "Member data stays private and with the SACCO",
       ]}
     >
       <div className="mb-7">
         <h1 className="text-2xl font-bold text-ink">Create your account</h1>
         <p className="mt-1 text-sm text-slate">
-          Set up access for the risk decision-support tool.
+          Set up your access to the tool.
         </p>
       </div>
 
@@ -102,7 +102,7 @@ export default function SignUp() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           minLength={8}
-          hint="Use 8 or more characters with a mix of letters and numbers."
+          hint="Use at least 8 characters, with letters and numbers."
           required
         />
 
@@ -111,8 +111,8 @@ export default function SignUp() {
           onChange={(e) => setConsent(e.target.checked)}
           label={
             <>
-              I understand member loan and guarantor data is confidential and
-              will only be used for risk decision support.
+              I understand that loan and member data is private, and I will only
+              use it to help decide on loans.
             </>
           }
         />

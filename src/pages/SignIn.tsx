@@ -36,18 +36,18 @@ export default function SignIn() {
 
   return (
     <AuthLayout
-      panelHeading="See the guarantor network behind every loan."
-      panelSub="Sign in to assess a loan with a network-aware risk score and the plain-language reasons behind it, drawn from the SACCO's own records."
+      panelHeading="See who backs every loan."
+      panelSub="Sign in to check how risky a loan looks. You get a simple score and clear reasons, using the SACCO's own records."
       points={[
-        "Risk score with the guarantor flags that drove it",
-        "Watchlist of active loans slipping into arrears",
-        "Decision support for officers, never an automatic approval",
+        "A risk score with the reasons behind it",
+        "A list of loans that are falling behind",
+        "Help to decide, never an automatic yes or no",
       ]}
     >
       <div className="mb-7">
         <h1 className="text-2xl font-bold text-ink">Sign in</h1>
         <p className="mt-1 text-sm text-slate">
-          Welcome back. Enter your work account to continue.
+          Welcome back. Sign in with your work account.
         </p>
       </div>
 

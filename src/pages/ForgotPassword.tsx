@@ -35,12 +35,12 @@ export default function ForgotPassword() {
 
   return (
     <AuthLayout
-      panelHeading="Trouble signing in?"
-      panelSub="Reset your password and you are back to assessing loans in a moment. For your security the link expires after a short while."
+      panelHeading="Can't sign in?"
+      panelSub="Reset your password and get back to work in a minute. For your safety, the link stops working after a short time."
       points={[
         "We send a one-time link to your work email",
-        "Your account stays locked until you set a new password",
-        "Nothing about member data changes",
+        "Your account is safe until you set a new password",
+        "None of the member data changes",
       ]}
     >
       {sent ? (
@@ -48,9 +48,9 @@ export default function ForgotPassword() {
           <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-accent-50 text-accent text-2xl">
             <CheckIcon />
           </div>
-          <h1 className="text-2xl font-bold text-ink">Check your inbox</h1>
+          <h1 className="text-2xl font-bold text-ink">Check your email</h1>
           <p className="mt-2 text-sm text-slate">
-            If <span className="font-semibold text-ink">{email}</span> matches an
+            If <span className="font-semibold text-ink">{email}</span> has an
             account, we have sent a link to reset your password. It can take a
             minute to arrive.
           </p>
@@ -58,7 +58,7 @@ export default function ForgotPassword() {
           {devToken && (
             <div className="mt-4">
               <Alert tone="info">
-                Testing mode: email is not wired up yet, so use this link.{" "}
+                Testing mode: email is not set up yet, so use this link.{" "}
                 <Link
                   to={`/reset-password?token=${devToken}`}
                   className="font-semibold underline"
@@ -98,7 +98,7 @@ export default function ForgotPassword() {
           <div className="mb-7">
             <h1 className="text-2xl font-bold text-ink">Reset your password</h1>
             <p className="mt-1 text-sm text-slate">
-              Enter the work email on your account and we will send a reset link.
+              Type your work email and we will send you a reset link.
             </p>
           </div>
 

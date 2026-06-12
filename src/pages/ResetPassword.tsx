@@ -55,11 +55,11 @@ export default function ResetPassword() {
   return (
     <AuthLayout
       panelHeading="Set a new password."
-      panelSub="Choose a strong password you do not use anywhere else. Once it is saved you can sign in straight away."
+      panelSub="Pick a strong password you do not use anywhere else. Once you save it, you can sign in right away."
       points={[
-        "Use 8 or more characters",
+        "Use at least 8 characters",
         "Mix letters and numbers",
-        "The reset link works only once",
+        "The link works only once",
       ]}
     >
       {done ? (
@@ -69,8 +69,7 @@ export default function ResetPassword() {
           </div>
           <h1 className="text-2xl font-bold text-ink">Password updated</h1>
           <p className="mt-2 text-sm text-slate">
-            Your password has been changed. You can now sign in with your new
-            password.
+            Your password is changed. You can sign in with your new password now.
           </p>
           <div className="mt-7">
             <Link to="/login">
@@ -85,7 +84,7 @@ export default function ResetPassword() {
           <div className="mb-7">
             <h1 className="text-2xl font-bold text-ink">Choose a new password</h1>
             <p className="mt-1 text-sm text-slate">
-              Set the password for your GuarantorLens account.
+              Set the password for your account.
             </p>
           </div>
 
@@ -93,8 +92,8 @@ export default function ResetPassword() {
             {error && <Alert tone="error">{error}</Alert>}
             {!token && (
               <Alert tone="info">
-                Open this page from the link in your reset email. The link
-                carries the token needed to set a new password.
+                Open this page using the link in your reset email. That link is
+                what lets you set a new password.
               </Alert>
             )}
 
@@ -108,7 +107,7 @@ export default function ResetPassword() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               minLength={8}
-              hint="Use 8 or more characters with a mix of letters and numbers."
+              hint="Use at least 8 characters, with letters and numbers."
               required
             />
 
@@ -124,7 +123,7 @@ export default function ResetPassword() {
             />
             {mismatch && (
               <p className="-mt-2 text-xs font-medium text-red-600">
-                The two passwords do not match.
+                The two passwords are not the same.
               </p>
             )}
 
