@@ -28,7 +28,7 @@ export default function Dashboard() {
         </p>
       )}
 
-      <div className="mt-8 grid gap-5 sm:grid-cols-2">
+      <div className="mt-8">
         <div className="rounded-xl border border-line bg-white p-6">
           <h2 className="text-base font-semibold text-ink">Assess a loan</h2>
           <p className="mt-1 text-sm text-slate">
@@ -38,14 +38,6 @@ export default function Dashboard() {
           <Link to="/assess" className="mt-4 inline-block">
             <Button variant="accent">Start an assessment</Button>
           </Link>
-        </div>
-
-        <div className="rounded-xl border border-line bg-white p-6">
-          <h2 className="text-base font-semibold text-ink">Coming next</h2>
-          <p className="mt-1 text-sm text-slate">
-            The portfolio dashboard, watch list of loans in arrears, and network
-            views will appear here behind this sign-in.
-          </p>
         </div>
       </div>
     </AppShell>

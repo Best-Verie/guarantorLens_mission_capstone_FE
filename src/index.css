@@ -1,10 +1,10 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 /* GuarantorLens design tokens (Umwalimu SACCO palette).
    Tailwind v4 turns each --color-* into utilities, e.g. bg-brand, text-accent. */
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: "Poppins", ui-sans-serif, system-ui, -apple-system, sans-serif;
 
   /* Royal blue = individual-borrower / primary */
   --color-brand-50: #eef2fb;
