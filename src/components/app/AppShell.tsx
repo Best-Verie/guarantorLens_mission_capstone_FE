@@ -9,6 +9,7 @@ const NAV = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/assess", label: "Assess risk" },
   { to: "/members", label: "Members" },
+  { to: "/network", label: "Network" },
 ];
 
 /** Shared header and layout for signed-in pages. */

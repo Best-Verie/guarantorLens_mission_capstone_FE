@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
 import { Alert } from "../components/ui/Alert";
 import { cn } from "../lib/cn";
 import { getMember } from "../api/member";
-import type { MemberProfile } from "../api/member";
+import type { MemberDetail, NetEdge, NetNode } from "../api/member";
 import { ApiError } from "../api/http";
 import { getToken } from "../lib/session";
 
@@ -19,10 +19,107 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
   );
 }
 
+function outcomeClass(outcome: string): string {
+  if (outcome === "Repaid") return "bg-green-50 text-green-700";
+  if (outcome === "Active") return "bg-amber-50 text-amber-700";
+  return "bg-red-50 text-red-600"; // Written off / At risk
+}
+
+function MemberChip({ id }: { id: string }) {
+  return (
+    <Link
+      to={`/member/${encodeURIComponent(id)}`}
+      className="rounded-lg border border-line bg-white px-2.5 py-1 font-mono text-xs text-brand hover:bg-brand-50"
+    >
+      {id}
+    </Link>
+  );
+}
+
+function NetworkGraph({
+  nodes,
+  edges,
+  center,
+}: {
+  nodes: NetNode[];
+  edges: NetEdge[];
+  center: string;
+}) {
+  const navigate = useNavigate();
+  const backers = nodes.filter((n) => n.role === "backer").slice(0, 12);
+  const backed = nodes.filter((n) => n.role === "backed").slice(0, 12);
+  const W = 640;
+  const H = Math.max(240, 60 + Math.max(backers.length, backed.length, 1) * 34);
+  const cx = W / 2;
+  const cy = H / 2;
+  const lx = 95;
+  const rx = W - 95;
+  const yFor = (i: number, n: number) => (H / (n + 1)) * (i + 1);
+
+  const pos: Record<string, { x: number; y: number }> = { [center]: { x: cx, y: cy } };
+  backers.forEach((b, i) => (pos[b.id] = { x: lx, y: yFor(i, backers.length) }));
+  backed.forEach((b, i) => (pos[b.id] = { x: rx, y: yFor(i, backed.length) }));
+
+  const color = (role: string) =>
+    role === "self" ? "#173C8E" : role === "backer" ? "#64748b" : "#F58220";
+  const radius = (n: NetNode) => 9 + Math.min(10, n.loans_backed);
+  const shown = nodes.filter((n) => pos[n.id]);
+
+  return (
+    <div>
+      <div className="mb-2 flex flex-wrap gap-4 text-xs text-slate">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-full" style={{ background: "#64748b" }} />
+          Backs this member
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-full" style={{ background: "#173C8E" }} />
+          This member
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-full" style={{ background: "#F58220" }} />
+          Backed by this member
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-full border-2 border-red-600" />
+          Has defaulted
+        </span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+        {edges.map((e, i) => {
+          const a = pos[e.source];
+          const b = pos[e.target];
+          if (!a || !b) return null;
+          return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#cbd5e1" strokeWidth="1.5" />;
+        })}
+        {shown.map((n) => {
+          const p = pos[n.id];
+          const r = radius(n);
+          return (
+            <g
+              key={n.id}
+              className={n.id === center ? "" : "cursor-pointer"}
+              onClick={() => n.id !== center && navigate(`/member/${encodeURIComponent(n.id)}`)}
+            >
+              {n.ever_defaulted && (
+                <circle cx={p.x} cy={p.y} r={r + 3} fill="none" stroke="#DC2626" strokeWidth="2" />
+              )}
+              <circle cx={p.x} cy={p.y} r={r} fill={color(n.role)} />
+              <text x={p.x} y={p.y - r - 5} textAnchor="middle" fontSize="10" fill="#475569">
+                {n.id}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
 export default function Member() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
-  const [member, setMember] = useState<MemberProfile | null>(null);
+  const [member, setMember] = useState<MemberDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +154,7 @@ export default function Member() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="font-mono text-2xl font-bold text-ink">{id}</h1>
-          <p className="mt-1 text-sm text-slate">Member profile and place in the network</p>
+          <p className="mt-1 text-sm text-slate">Member profile, loans, and network</p>
         </div>
         <Button variant="secondary" onClick={() => navigate("/members")}>
           Look up another
@@ -69,7 +166,7 @@ export default function Member() {
 
       {member && (
         <>
-          <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand">
               {member.branch} branch
             </span>
@@ -85,26 +182,11 @@ export default function Member() {
           </div>
 
           <section className="mb-6">
-            <h2 className="mb-2 text-sm font-semibold text-ink">Profile</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <h2 className="mb-2 text-sm font-semibold text-ink">Profile and place in the network</h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Stat label="Savings" value={rwf(member.savings)} />
-              <Stat label="Salary" value={rwf(member.salary)} hint="As of disbursement, if on file" />
-            </div>
-          </section>
-
-          <section>
-            <h2 className="mb-2 text-sm font-semibold text-ink">Place in the network</h2>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Stat
-                label="Loans backed"
-                value={String(member.loans_backed)}
-                hint="Loans this member guarantees"
-              />
-              <Stat
-                label="Total connections"
-                value={String(member.total_connections)}
-                hint="Links in the guarantee graph"
-              />
+              <Stat label="Salary" value={rwf(member.salary)} />
+              <Stat label="Loans backed" value={String(member.loans_backed)} hint="Loans this member guarantees" />
               <Stat
                 label="Community default rate"
                 value={`${Math.round(member.community_default_rate * 100)}%`}
@@ -113,15 +195,105 @@ export default function Member() {
             </div>
           </section>
 
-          <p
-            className={cn(
-              "mt-6 rounded-lg px-4 py-3 text-sm",
-              "bg-brand-50 text-brand-800"
+          {/* Loans as borrower */}
+          <section className="mb-6">
+            <h2 className="mb-2 text-sm font-semibold text-ink">
+              Loans taken ({member.loans.length})
+            </h2>
+            {member.loans.length === 0 ? (
+              <p className="text-sm text-slate">This member has not taken a loan in the data.</p>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-line bg-white">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 text-left text-xs text-slate">
+                    <tr>
+                      <th className="px-4 py-2 font-medium">Loan</th>
+                      <th className="px-4 py-2 font-medium">Amount</th>
+                      <th className="px-4 py-2 font-medium">Date</th>
+                      <th className="px-4 py-2 font-medium">Outcome</th>
+                      <th className="px-4 py-2 font-medium">Guarantors</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {member.loans.map((ln) => (
+                      <tr key={ln.loan_key}>
+                        <td className="px-4 py-2 font-mono text-ink">{ln.loan_key}</td>
+                        <td className="px-4 py-2 font-mono text-ink">{rwf(ln.amount)}</td>
+                        <td className="px-4 py-2 text-slate">{ln.disb_date ?? "-"}</td>
+                        <td className="px-4 py-2">
+                          <span className={cn("rounded px-2 py-0.5 text-xs font-medium", outcomeClass(ln.outcome))}>
+                            {ln.outcome}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2">
+                          <div className="flex flex-wrap gap-1.5">
+                            {ln.guarantors.map((g) => (
+                              <MemberChip key={g} id={g} />
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
-          >
-            Loan history, who backs this member, and the network graph appear here
-            once the loans data is loaded.
-          </p>
+          </section>
+
+          {/* Backers + guarantees given */}
+          <div className="mb-6 grid gap-6 lg:grid-cols-2">
+            <section>
+              <h2 className="mb-2 text-sm font-semibold text-ink">
+                Backed by ({member.backers.length})
+              </h2>
+              {member.backers.length === 0 ? (
+                <p className="text-sm text-slate">No one guarantees this member's loans.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {member.backers.map((b) => (
+                    <MemberChip key={b} id={b} />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section>
+              <h2 className="mb-2 text-sm font-semibold text-ink">
+                Guarantees given ({member.guarantees_given.length})
+              </h2>
+              {member.guarantees_given.length === 0 ? (
+                <p className="text-sm text-slate">This member does not guarantee anyone.</p>
+              ) : (
+                <ul className="flex flex-col gap-1.5 text-sm">
+                  {member.guarantees_given.slice(0, 12).map((g) => (
+                    <li key={g.loan_key} className="flex items-center gap-2">
+                      <MemberChip id={g.borrower} />
+                      <span className={cn("rounded px-2 py-0.5 text-xs font-medium", outcomeClass(g.outcome))}>
+                        {g.outcome}
+                      </span>
+                    </li>
+                  ))}
+                  {member.guarantees_given.length > 12 && (
+                    <li className="text-xs text-slate">
+                      + {member.guarantees_given.length - 12} more
+                    </li>
+                  )}
+                </ul>
+              )}
+            </section>
+          </div>
+
+          {/* Network */}
+          <section>
+            <h2 className="mb-2 text-sm font-semibold text-ink">Guarantor network</h2>
+            <div className="rounded-xl border border-line bg-white p-5">
+              <NetworkGraph
+                nodes={member.network.nodes}
+                edges={member.network.edges}
+                center={member.member_id}
+              />
+            </div>
+          </section>
         </>
       )}
     </AppShell>

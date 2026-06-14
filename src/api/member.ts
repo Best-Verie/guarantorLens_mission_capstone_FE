@@ -1,7 +1,33 @@
 /** Member lookup API. */
 import { request } from "./http";
 
-export interface MemberProfile {
+export interface LoanRef {
+  loan_key: string;
+  amount: number;
+  disb_date?: string | null;
+  outcome: string;
+  guarantors: string[];
+}
+
+export interface BackedLoan {
+  loan_key: string;
+  borrower: string;
+  outcome: string;
+}
+
+export interface NetNode {
+  id: string;
+  role: "self" | "backer" | "backed";
+  ever_defaulted: boolean;
+  loans_backed: number;
+}
+
+export interface NetEdge {
+  source: string;
+  target: string;
+}
+
+export interface MemberDetail {
   member_id: string;
   branch?: string | null;
   savings?: number | null;
@@ -11,8 +37,12 @@ export interface MemberProfile {
   loans_backed: number;
   total_connections: number;
   community_default_rate: number;
+  loans: LoanRef[];
+  backers: string[];
+  guarantees_given: BackedLoan[];
+  network: { nodes: NetNode[]; edges: NetEdge[] };
 }
 
-export function getMember(id: string, token: string): Promise<MemberProfile> {
-  return request<MemberProfile>(`/member/${encodeURIComponent(id)}`, { token });
+export function getMember(id: string, token: string): Promise<MemberDetail> {
+  return request<MemberDetail>(`/member/${encodeURIComponent(id)}`, { token });
 }
