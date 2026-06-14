@@ -1,7 +1,7 @@
-import { Navigate, useNavigate } from "react-router-dom";
-import { Logo } from "../components/brand/Logo";
+import { Link } from "react-router-dom";
+import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
-import { clearSession, getToken, getUser } from "../lib/session";
+import { getUser } from "../lib/session";
 
 const ROLE_LABELS: Record<string, string> = {
   loan_officer: "Loan officer",
@@ -10,49 +10,44 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 /**
- * Placeholder landing for a signed-in user. It confirms the auth flow works
- * end to end; the real portfolio dashboard replaces this later.
+ * Signed-in landing. The portfolio dashboard (stats, watchlist, network) replaces
+ * this later; for now it confirms sign-in and links to the working assessment.
  */
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const token = getToken();
   const user = getUser();
 
-  // Not signed in -> back to login.
-  if (!token || !user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  function signOut() {
-    clearSession();
-    navigate("/login", { replace: true });
-  }
-
   return (
-    <div className="min-h-full bg-slate-50">
-      <header className="flex items-center justify-between border-b border-line bg-white px-6 py-4">
-        <Logo theme="light" />
-        <Button variant="secondary" onClick={signOut}>
-          Sign out
-        </Button>
-      </header>
-
-      <main className="mx-auto max-w-2xl px-6 py-16">
-        <p className="text-sm font-semibold text-accent">You are signed in</p>
-        <h1 className="mt-2 text-3xl font-bold text-ink">
-          Welcome, {user.full_name.split(" ")[0]}.
-        </h1>
+    <AppShell>
+      <p className="text-sm font-semibold text-accent">You are signed in</p>
+      <h1 className="mt-2 text-3xl font-bold text-ink">
+        Welcome{user ? `, ${user.full_name.split(" ")[0]}` : ""}.
+      </h1>
+      {user && (
         <p className="mt-2 text-slate">
           {ROLE_LABELS[user.role] ?? user.role} &middot; {user.email}
         </p>
+      )}
 
-        <div className="mt-8 rounded-xl border border-line bg-white p-6">
-          <p className="text-sm text-slate">
-            Sign in works. The dashboard, loan checks, watch list, and network
-            views come next, and they will sit behind this sign-in.
+      <div className="mt-8 grid gap-5 sm:grid-cols-2">
+        <div className="rounded-xl border border-line bg-white p-6">
+          <h2 className="text-base font-semibold text-ink">Assess a loan</h2>
+          <p className="mt-1 text-sm text-slate">
+            Score a loan using the borrower and their guarantor network, with the
+            reasons behind the score.
+          </p>
+          <Link to="/assess" className="mt-4 inline-block">
+            <Button variant="accent">Start an assessment</Button>
+          </Link>
+        </div>
+
+        <div className="rounded-xl border border-line bg-white p-6">
+          <h2 className="text-base font-semibold text-ink">Coming next</h2>
+          <p className="mt-1 text-sm text-slate">
+            The portfolio dashboard, watch list of loans in arrears, and network
+            views will appear here behind this sign-in.
           </p>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
