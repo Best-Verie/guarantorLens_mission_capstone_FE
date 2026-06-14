@@ -32,3 +32,11 @@ body,
 #root {
   height: 100%;
 }
+
+/* Keep brand colors when printing the risk report. */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

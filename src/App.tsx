@@ -6,6 +6,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import AssessRisk from "./pages/AssessRisk";
 import AssessResult from "./pages/AssessResult";
+import AssessReport from "./pages/AssessReport";
 import { RequireAuth } from "./components/auth/RequireAuth";
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
         <Route path="/assess" element={<RequireAuth><AssessRisk /></RequireAuth>} />
         <Route path="/assess/result" element={<RequireAuth><AssessResult /></RequireAuth>} />
+        <Route path="/assess/report" element={<RequireAuth><AssessReport /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

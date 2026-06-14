@@ -1,44 +1,9 @@
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
+import { ScoreGauge } from "../components/app/ScoreGauge";
 import { cn } from "../lib/cn";
 import type { AssessInput, AssessResult, Reason } from "../api/risk";
-
-const BAND_COLOR: Record<string, string> = {
-  High: "#DC2626",
-  Medium: "#F58220",
-  Low: "#0E7C66",
-};
-
-function Gauge({ score, band }: { score: number; band: string }) {
-  const color = BAND_COLOR[band] ?? "#173C8E";
-  const r = 70;
-  const circ = 2 * Math.PI * r;
-  const offset = circ * (1 - score / 100);
-  return (
-    <svg viewBox="0 0 180 180" className="h-44 w-44">
-      <circle cx="90" cy="90" r={r} fill="none" stroke="#e2e8f0" strokeWidth="14" />
-      <circle
-        cx="90"
-        cy="90"
-        r={r}
-        fill="none"
-        stroke={color}
-        strokeWidth="14"
-        strokeLinecap="round"
-        strokeDasharray={circ}
-        strokeDashoffset={offset}
-        transform="rotate(-90 90 90)"
-      />
-      <text x="90" y="88" textAnchor="middle" fill="#0f172a" fontSize="42" fontWeight="700">
-        {score}
-      </text>
-      <text x="90" y="112" textAnchor="middle" fill={color} fontSize="15" fontWeight="600">
-        {band}
-      </text>
-    </svg>
-  );
-}
 
 function ReasonRow({ r }: { r: Reason }) {
   const up = r.direction === "up";
@@ -93,15 +58,23 @@ export default function AssessResult() {
             {input.guarantor_ids.length} guarantor(s)
           </p>
         </div>
-        <Button variant="secondary" onClick={() => navigate("/assess")}>
-          New assessment
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            variant="secondary"
+            onClick={() => navigate("/assess/report", { state: { result, input } })}
+          >
+            Download report
+          </Button>
+          <Button variant="secondary" onClick={() => navigate("/assess")}>
+            New assessment
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-3">
         {/* Score */}
         <section className="flex flex-col items-center rounded-xl border border-line bg-white p-6">
-          <Gauge score={result.risk_score} band={result.band} />
+          <ScoreGauge score={result.risk_score} band={result.band} />
           <p className="mt-3 text-center text-sm text-slate">
             Risk score out of 100
           </p>
