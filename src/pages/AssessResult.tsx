@@ -1,4 +1,4 @@
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
 import { ScoreGauge } from "../components/app/ScoreGauge";
@@ -54,7 +54,18 @@ export default function AssessResult() {
         <div>
           <h1 className="text-2xl font-bold text-ink">Assessment result</h1>
           <p className="mt-1 text-sm text-slate">
-            {input.borrower_id ? `Borrower ${input.borrower_id} · ` : ""}
+            {input.borrower_id && (
+              <>
+                Borrower{" "}
+                <Link
+                  to={`/member/${encodeURIComponent(input.borrower_id)}`}
+                  className="font-mono text-brand hover:underline"
+                >
+                  {input.borrower_id}
+                </Link>{" "}
+                &middot;{" "}
+              </>
+            )}
             {input.guarantor_ids.length} guarantor(s)
           </p>
         </div>
@@ -136,6 +147,22 @@ export default function AssessResult() {
               {result.network.guarantors_with_prior_default} of {result.network.n_guarantors}
             </dd>
           </div>
+          {input.guarantor_ids.length > 0 && (
+            <div className="flex flex-col gap-1 border-b border-line py-1 sm:col-span-2">
+              <dt className="text-slate">Guarantors</dt>
+              <dd className="flex flex-wrap gap-2">
+                {input.guarantor_ids.map((g) => (
+                  <Link
+                    key={g}
+                    to={`/member/${encodeURIComponent(g)}`}
+                    className="font-mono text-brand hover:underline"
+                  >
+                    {g}
+                  </Link>
+                ))}
+              </dd>
+            </div>
+          )}
         </dl>
       </section>
 

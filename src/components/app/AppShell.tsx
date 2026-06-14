@@ -8,6 +8,7 @@ import { clearSession, getUser } from "../../lib/session";
 const NAV = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/assess", label: "Assess risk" },
+  { to: "/members", label: "Members" },
 ];
 
 /** Shared header and layout for signed-in pages. */
