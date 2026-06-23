@@ -14,12 +14,20 @@ export interface NetworkInfo {
   guarantor_ids: string[];
 }
 
+export interface ShapContribution {
+  feature: string;
+  label: string;
+  value: number;
+  direction: "up" | "down";
+}
+
 export interface AssessResult {
   risk_score: number;
   band: "Low" | "Medium" | "High";
   probability: number;
   source: "model" | "heuristic";
   reasons: Reason[];
+  shap: ShapContribution[];
   flags: string[];
   network: NetworkInfo;
 }

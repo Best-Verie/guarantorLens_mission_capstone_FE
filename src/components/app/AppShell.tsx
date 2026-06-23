@@ -10,6 +10,8 @@ const NAV = [
   { to: "/assess", label: "Assess risk" },
   { to: "/members", label: "Members" },
   { to: "/network", label: "Network" },
+  { to: "/watchlist", label: "Watchlist" },
+  { to: "/insights", label: "Insights" },
 ];
 
 /** Shared header and layout for signed-in pages. */
