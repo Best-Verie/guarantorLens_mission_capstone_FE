@@ -19,7 +19,6 @@ export default function AssessRisk() {
   const [amount, setAmount] = useState("1323000");
   const [savings, setSavings] = useState("32036");
   const [salary, setSalary] = useState("91617");
-  const [disbDate, setDisbDate] = useState("2023-02-21");
   const [guarantors, setGuarantors] = useState<string[]>(["Gasabo-189", "Gasabo-664", "Gasabo-366"]);
   const [guarantorInput, setGuarantorInput] = useState("");
 
@@ -54,7 +53,6 @@ export default function AssessRisk() {
       amount: Number(amount),
       savings: Number(savings) || 0,
       salary: salary.trim() ? Number(salary) : null,
-      disbursement_date: disbDate || undefined,
       guarantor_ids: guarantors,
     };
     if (!input.amount || input.amount <= 0) {
@@ -114,13 +112,6 @@ export default function AssessRisk() {
                 value={salary}
                 onChange={(e) => setSalary(e.target.value)}
                 hint="Leave blank if not on file."
-              />
-              <TextField
-                label="Disbursement date"
-                type="date"
-                value={disbDate}
-                onChange={(e) => setDisbDate(e.target.value)}
-                hint="Features are computed as of this date."
               />
             </div>
           </section>

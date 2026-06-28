@@ -101,12 +101,6 @@ export default function AssessReport() {
               <td className="py-1.5 text-right font-mono text-ink">{rwf(input.salary)}</td>
             </tr>
             <tr>
-              <td className="py-1.5 text-slate">Disbursement date</td>
-              <td className="py-1.5 text-right font-mono text-ink">
-                {input.disbursement_date ?? "today"}
-              </td>
-            </tr>
-            <tr>
               <td className="py-1.5 text-slate">Guarantors</td>
               <td className="py-1.5 text-right font-mono text-ink">
                 {input.guarantor_ids.join(", ") || "none"}

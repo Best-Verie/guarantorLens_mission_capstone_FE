@@ -125,50 +125,6 @@ export default function AssessResult() {
         </section>
       </div>
 
-      {/* SHAP contributions (model-faithful) */}
-      {result.shap && result.shap.length > 0 && (
-        <section className="mt-5 rounded-xl border border-line bg-white p-6">
-          <h2 className="text-sm font-semibold text-ink">What the model weighed (SHAP)</h2>
-          <p className="mt-1 text-sm text-slate">
-            The model's own reasons for this score. Bars to the right raise risk; bars
-            to the left lower it.
-          </p>
-          <div className="mt-4 flex flex-col gap-2">
-            {(() => {
-              const maxAbs = Math.max(...result.shap.map((s) => Math.abs(s.value))) || 1;
-              return result.shap.map((s) => {
-                const pct = (Math.abs(s.value) / maxAbs) * 50;
-                const up = s.direction === "up";
-                return (
-                  <div key={s.feature} className="flex items-center gap-3 text-sm">
-                    <span className="w-44 shrink-0 text-right text-slate">{s.label}</span>
-                    <div className="relative h-4 flex-1">
-                      <div className="absolute left-1/2 top-0 h-4 w-px bg-line" />
-                      <div
-                        className={cn("absolute top-0 h-4 rounded-sm", up ? "bg-red-400" : "bg-green-400")}
-                        style={up ? { left: "50%", width: `${pct}%` } : { right: "50%", width: `${pct}%` }}
-                      />
-                    </div>
-                    <span
-                      className={cn(
-                        "w-14 shrink-0 font-mono text-xs",
-                        up ? "text-red-600" : "text-green-700"
-                      )}
-                    >
-                      {s.value > 0 ? "+" : ""}
-                      {s.value.toFixed(2)}
-                    </span>
-                  </div>
-                );
-              });
-            })()}
-          </div>
-          <p className="mt-3 text-xs text-slate">
-            SHAP contributions (log-odds) from the served model.
-          </p>
-        </section>
-      )}
-
       {/* Loan summary */}
       <section className="mt-5 rounded-xl border border-line bg-white p-6">
         <h2 className="mb-3 text-sm font-semibold text-ink">Loan summary</h2>

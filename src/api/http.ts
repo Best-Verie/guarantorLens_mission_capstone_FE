@@ -41,14 +41,23 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   if (token) headers.Authorization = `Bearer ${token}`;
 
   let res: Response;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 20000); // never hang forever
   try {
     res = await fetch(`${API_URL}${path}`, {
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
+      signal: ctrl.signal,
     });
-  } catch {
-    throw new ApiError(0, "Could not reach the server. Check your connection and try again.");
+  } catch (e) {
+    const msg =
+      e instanceof DOMException && e.name === "AbortError"
+        ? "The server took too long to respond. It may be starting up; try again."
+        : "Could not reach the server. Check that the backend is running and VITE_API_URL is correct.";
+    throw new ApiError(0, msg);
+  } finally {
+    clearTimeout(timer);
   }
 
   const isJson = res.headers.get("content-type")?.includes("application/json");
