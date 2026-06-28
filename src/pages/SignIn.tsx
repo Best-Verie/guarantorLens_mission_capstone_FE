@@ -36,7 +36,7 @@ export default function SignIn() {
 
   return (
     <AuthLayout
-      panelHeading="An Overview of who backs every loan."
+      panelHeading="Make informed loan decisions."
       panelSub="Sign in to check how risky a loan looks. You get a simple score and clear reasons, using the SACCO's own records."
       points={[
         "A risk score with the reasons behind it",
