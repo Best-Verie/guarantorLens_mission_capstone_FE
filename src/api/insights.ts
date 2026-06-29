@@ -36,3 +36,17 @@ export function getSuperGuarantors(token: string): Promise<SuperGuarantor[]> {
 export function getCommunities(token: string): Promise<CommunityStat[]> {
   return request<CommunityStat[]>("/insights/communities", { token });
 }
+
+export interface EarlyWarningItem {
+  loan_key: string;
+  borrower: string;
+  branch?: string | null;
+  amount: number;
+  days_in_arrears: number;
+  risk_score: number;
+  band: "Low" | "Medium" | "High";
+}
+
+export function getEarlyWarning(token: string): Promise<EarlyWarningItem[]> {
+  return request<EarlyWarningItem[]>("/insights/early-warning", { token });
+}

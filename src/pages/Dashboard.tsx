@@ -1,7 +1,10 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
-import { getUser } from "../lib/session";
+import { getUser, getToken } from "../lib/session";
+import { getEarlyWarning } from "../api/insights";
+import type { EarlyWarningItem } from "../api/insights";
 
 const ROLE_LABELS: Record<string, string> = {
   loan_officer: "Loan officer",
@@ -9,12 +12,27 @@ const ROLE_LABELS: Record<string, string> = {
   branch_manager: "Branch manager",
 };
 
-/**
- * Signed-in landing. The portfolio dashboard (stats, watchlist, network) replaces
- * this later; for now it confirms sign-in and links to the working assessment.
- */
+const bandClass: Record<string, string> = {
+  High: "bg-red-100 text-red-700",
+  Medium: "bg-amber-100 text-amber-700",
+  Low: "bg-emerald-100 text-emerald-700",
+};
+
+/** Signed-in landing: quick actions plus a live early-warning snapshot. */
 export default function Dashboard() {
   const user = getUser();
+  const [items, setItems] = useState<EarlyWarningItem[] | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+    getEarlyWarning(token)
+      .then(setItems)
+      .catch(() => setFailed(true));
+  }, []);
+
+  const highCount = items ? items.filter((i) => i.band === "High").length : 0;
 
   return (
     <AppShell>
@@ -28,7 +46,8 @@ export default function Dashboard() {
         </p>
       )}
 
-      <div className="mt-8">
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        {/* Assess */}
         <div className="rounded-xl border border-line bg-white p-6">
           <h2 className="text-base font-semibold text-ink">Assess a loan</h2>
           <p className="mt-1 text-sm text-slate">
@@ -38,6 +57,70 @@ export default function Dashboard() {
           <Link to="/assess" className="mt-4 inline-block">
             <Button variant="accent">Start an assessment</Button>
           </Link>
+        </div>
+
+        {/* Early warning snapshot */}
+        <div className="rounded-xl border border-line bg-white p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-ink">Early warning</h2>
+            <Link to="/early-warning" className="text-sm font-medium text-brand hover:underline">
+              View all
+            </Link>
+          </div>
+          <p className="mt-1 text-sm text-slate">
+            Active loans not yet late, ranked by predicted risk.
+          </p>
+
+          {items === null && !failed && (
+            <p className="mt-4 text-sm text-slate">Loading...</p>
+          )}
+          {failed && (
+            <p className="mt-4 text-sm text-slate">
+              Early warning is unavailable right now.
+            </p>
+          )}
+
+          {items && (
+            <>
+              <div className="mt-4 flex gap-6">
+                <div>
+                  <div className="text-2xl font-bold text-red-600">{highCount}</div>
+                  <div className="text-xs text-slate">high risk</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-ink">{items.length}</div>
+                  <div className="text-xs text-slate">active loans scored</div>
+                </div>
+              </div>
+
+              <ul className="mt-4 divide-y divide-line">
+                {items.slice(0, 3).map((it) => (
+                  <li key={it.loan_key} className="flex items-center justify-between py-2 text-sm">
+                    <Link
+                      to={`/member/${encodeURIComponent(it.borrower)}`}
+                      className="font-mono text-brand hover:underline"
+                    >
+                      {it.borrower}
+                    </Link>
+                    <span className="flex items-center gap-2">
+                      <span className="font-mono text-ink">{it.risk_score}/100</span>
+                      <span
+                        className={
+                          "rounded px-2 py-0.5 text-xs font-medium " +
+                          (bandClass[it.band] ?? "text-slate")
+                        }
+                      >
+                        {it.band}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+                {items.length === 0 && (
+                  <li className="py-2 text-sm text-slate">No active loans to score.</li>
+                )}
+              </ul>
+            </>
+          )}
         </div>
       </div>
     </AppShell>

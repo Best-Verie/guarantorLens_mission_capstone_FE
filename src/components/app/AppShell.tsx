@@ -11,6 +11,7 @@ const NAV = [
   { to: "/members", label: "Members" },
   { to: "/network", label: "Network" },
   { to: "/watchlist", label: "Watchlist" },
+  { to: "/early-warning", label: "Early warning" },
   { to: "/insights", label: "Insights" },
 ];
 

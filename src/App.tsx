@@ -11,6 +11,7 @@ import Member from "./pages/Member";
 import MemberLookup from "./pages/MemberLookup";
 import NetworkExplorer from "./pages/NetworkExplorer";
 import Watchlist from "./pages/Watchlist";
+import EarlyWarning from "./pages/EarlyWarning";
 import Insights from "./pages/Insights";
 import { RequireAuth } from "./components/auth/RequireAuth";
 
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/member/:id" element={<RequireAuth><Member /></RequireAuth>} />
         <Route path="/network" element={<RequireAuth><NetworkExplorer /></RequireAuth>} />
         <Route path="/watchlist" element={<RequireAuth><Watchlist /></RequireAuth>} />
+        <Route path="/early-warning" element={<RequireAuth><EarlyWarning /></RequireAuth>} />
         <Route path="/insights" element={<RequireAuth><Insights /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
