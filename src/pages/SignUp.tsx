@@ -15,8 +15,8 @@ import { saveSession } from "../lib/session";
 
 const ROLES: { value: Role; label: string }[] = [
   { value: "loan_officer", label: "Loan officer" },
-  { value: "credit_staff", label: "Credit staff" },
-  { value: "branch_manager", label: "Branch manager" },
+  { value: "credit_manager", label: "Credit manager" },
+  { value: "admin", label: "Admin" },
 ];
 
 export default function SignUp() {

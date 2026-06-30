@@ -1,7 +1,7 @@
 /** Auth API: maps the React forms to the FastAPI /auth endpoints. */
 import { request } from "./http";
 
-export type Role = "loan_officer" | "credit_staff" | "branch_manager";
+export type Role = "loan_officer" | "credit_manager" | "admin";
 
 export interface User {
   id: number;

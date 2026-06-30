@@ -10,8 +10,8 @@ import type { ApplicationStats } from "../api/applications";
 
 const ROLE_LABELS: Record<string, string> = {
   loan_officer: "Loan officer",
-  credit_staff: "Credit staff",
-  branch_manager: "Branch manager",
+  credit_manager: "Credit manager",
+  admin: "Admin",
 };
 
 const bandClass: Record<string, string> = {

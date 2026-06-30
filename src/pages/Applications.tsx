@@ -23,7 +23,7 @@ const statusClass: Record<string, string> = {
 export default function Applications() {
   const navigate = useNavigate();
   const user = getUser();
-  const isManager = !!user && ["credit_staff", "branch_manager", "admin"].includes(user.role);
+  const isManager = !!user && ["credit_manager", "admin"].includes(user.role);
   const [items, setItems] = useState<ApplicationListItem[]>([]);
   const [escalatedOnly, setEscalatedOnly] = useState(false);
   const [loading, setLoading] = useState(true);

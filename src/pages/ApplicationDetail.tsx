@@ -120,83 +120,87 @@ export default function ApplicationDetail() {
 
         {error && <div className="mt-4"><Alert tone="error">{error}</Alert></div>}
 
-        {/* Assessment summary */}
-        <section className="mt-6 rounded-xl border border-line bg-white p-5">
-          <div className="flex items-center gap-6">
-            {app.risk_score != null && app.band && (
-              <ScoreGauge score={app.risk_score} band={app.band} />
-            )}
-            <div>
-              <h2 className="text-lg font-bold text-ink">{app.band} risk · {app.risk_score}/100</h2>
-              <p className="mt-1 text-sm text-slate">
-                {app.guarantor_ids.length} guarantor(s) · loan {rwf(app.amount)} · savings {rwf(app.savings)}
-              </p>
-              <p className="mt-1 text-xs text-slate">Score source: {app.source === "model" ? "model" : "rule-based fallback"}</p>
-            </div>
-          </div>
-
-          {app.flags.length > 0 && (
-            <>
-              <h3 className="mt-5 text-sm font-semibold text-ink">Flags</h3>
-              <ul className="mt-1 list-disc pl-5 text-sm text-ink">
-                {app.flags.map((f) => <li key={f}>{f}</li>)}
-              </ul>
-            </>
-          )}
-          {app.reasons.length > 0 && (
-            <>
-              <h3 className="mt-4 text-sm font-semibold text-ink">Why this score</h3>
-              <ul className="mt-1 space-y-1 text-sm">
-                {app.reasons.map((r) => (
-                  <li key={r.label} className="text-ink">
-                    <span className="font-semibold">{r.direction === "up" ? "Raises" : "Lowers"} risk:</span>{" "}
-                    {r.label} ({r.kind}). {r.detail}
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
-
-        {/* What-if simulator */}
-        <section className="mt-6 rounded-xl border border-line bg-white p-5">
-          <h2 className="text-sm font-semibold text-ink">What-if simulator</h2>
-          <p className="mt-1 text-sm text-slate">
-            Change the loan or guarantors and see how the risk would move, so you can advise the client.
-          </p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <label className="text-sm text-slate">Amount
-              <input className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-ink" type="number"
-                     value={wfAmount} onChange={(e) => setWfAmount(e.target.value)} /></label>
-            <label className="text-sm text-slate">Savings
-              <input className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-ink" type="number"
-                     value={wfSavings} onChange={(e) => setWfSavings(e.target.value)} /></label>
-            <label className="text-sm text-slate">Salary
-              <input className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-ink" type="number"
-                     value={wfSalary} onChange={(e) => setWfSalary(e.target.value)} /></label>
-            <label className="text-sm text-slate">Guarantors (comma-separated IDs)
-              <input className="mt-1 w-full rounded-lg border border-line px-3 py-2 font-mono text-ink"
-                     value={wfGuar} onChange={(e) => setWfGuar(e.target.value)} /></label>
-          </div>
-          <div className="mt-3 flex items-center gap-4">
-            <Button variant="secondary" onClick={runWhatIf} disabled={wfBusy}>
-              {wfBusy ? "Recalculating..." : "Recalculate"}
-            </Button>
-            {wf && (
-              <div className="text-sm">
-                <span className={"rounded px-2 py-0.5 text-xs font-medium " + (bandClass[wf.band] ?? "")}>
-                  {wf.band}
-                </span>{" "}
-                <span className="font-mono text-ink">{wf.risk_score}/100</span>{" "}
-                {delta != null && (
-                  <span className={delta < 0 ? "text-emerald-600" : delta > 0 ? "text-red-600" : "text-slate"}>
-                    ({delta > 0 ? "+" : ""}{delta} vs original {app.risk_score})
-                  </span>
-                )}
+        {/* Result + what-if side by side */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          {/* Assessment result */}
+          <section className="rounded-xl border border-line bg-white p-5">
+            <div className="flex items-center gap-5">
+              {app.risk_score != null && app.band && (
+                <ScoreGauge score={app.risk_score} band={app.band} />
+              )}
+              <div>
+                <h2 className="text-lg font-bold text-ink">{app.band} risk · {app.risk_score}/100</h2>
+                <p className="mt-1 text-sm text-slate">
+                  {app.guarantor_ids.length} guarantor(s) · loan {rwf(app.amount)} · savings {rwf(app.savings)}
+                </p>
+                <p className="mt-1 text-xs text-slate">Score source: {app.source === "model" ? "model" : "rule-based fallback"}</p>
               </div>
+            </div>
+            {app.flags.length > 0 && (
+              <>
+                <h3 className="mt-5 text-sm font-semibold text-ink">Flags</h3>
+                <ul className="mt-1 list-disc pl-5 text-sm text-ink">
+                  {app.flags.map((f) => <li key={f}>{f}</li>)}
+                </ul>
+              </>
             )}
-          </div>
-        </section>
+          </section>
+
+          {/* What-if card (highlighted, sits next to the result) */}
+          <section className="rounded-xl border-2 border-accent/40 bg-accent-50/40 p-5">
+            <h2 className="text-sm font-semibold text-ink">Simulate a change (what-if)</h2>
+            <p className="mt-1 text-sm text-slate">
+              Try a different loan or guarantors and see how the risk moves, without starting over.
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className="text-sm text-slate">Amount
+                <input className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 text-ink" type="number"
+                       value={wfAmount} onChange={(e) => setWfAmount(e.target.value)} /></label>
+              <label className="text-sm text-slate">Savings
+                <input className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 text-ink" type="number"
+                       value={wfSavings} onChange={(e) => setWfSavings(e.target.value)} /></label>
+              <label className="text-sm text-slate">Salary
+                <input className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 text-ink" type="number"
+                       value={wfSalary} onChange={(e) => setWfSalary(e.target.value)} /></label>
+              <label className="text-sm text-slate">Guarantors (comma-separated IDs)
+                <input className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 font-mono text-ink"
+                       value={wfGuar} onChange={(e) => setWfGuar(e.target.value)} /></label>
+            </div>
+            <div className="mt-3 flex items-center gap-3">
+              <Button variant="accent" onClick={runWhatIf} disabled={wfBusy}>
+                {wfBusy ? "Recalculating..." : "Recalculate"}
+              </Button>
+              {wf && (
+                <div className="text-sm">
+                  <span className={"rounded px-2 py-0.5 text-xs font-medium " + (bandClass[wf.band] ?? "")}>
+                    {wf.band}
+                  </span>{" "}
+                  <span className="font-mono text-ink">{wf.risk_score}/100</span>{" "}
+                  {delta != null && (
+                    <span className={delta < 0 ? "text-emerald-600" : delta > 0 ? "text-red-600" : "text-slate"}>
+                      ({delta > 0 ? "+" : ""}{delta} vs {app.risk_score})
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* Why this score (full width) */}
+        {app.reasons.length > 0 && (
+          <section className="mt-6 rounded-xl border border-line bg-white p-5">
+            <h3 className="text-sm font-semibold text-ink">Why this score</h3>
+            <ul className="mt-1 space-y-1 text-sm">
+              {app.reasons.map((r) => (
+                <li key={r.label} className="text-ink">
+                  <span className="font-semibold">{r.direction === "up" ? "Raises" : "Lowers"} risk:</span>{" "}
+                  {r.label} ({r.kind}). {r.detail}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* Escalation */}
         <section className="mt-6 rounded-xl border border-line bg-white p-5">
