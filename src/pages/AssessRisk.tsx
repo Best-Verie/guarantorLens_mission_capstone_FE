@@ -6,21 +6,16 @@ import { TextField } from "../components/ui/TextField";
 import { Button } from "../components/ui/Button";
 import { Alert } from "../components/ui/Alert";
 import { UserIcon } from "../components/icons";
-import { assessRisk } from "../api/risk";
 import type { AssessInput } from "../api/risk";
+import { createApplication } from "../api/applications";
 import { ApiError } from "../api/http";
 import { getToken } from "../lib/session";
-
-type Mode = "existing" | "new";
 
 export default function AssessRisk() {
   const navigate = useNavigate();
 
-  // Existing client = a borrower already in the system (we look up their history).
-  // New applicant = someone not yet in the system (no credit history yet).
-  const [mode, setMode] = useState<Mode>("existing");
-
-  // Pre-filled with the Gasabo-335 example so the existing-client demo is one click.
+  // Borrower ID is optional: enter an existing member to pull their history,
+  // or leave it blank for a brand-new applicant.
   const [borrowerId, setBorrowerId] = useState("Gasabo-335");
   const [amount, setAmount] = useState("1323000");
   const [savings, setSavings] = useState("32036");
@@ -55,8 +50,8 @@ export default function AssessRisk() {
       return;
     }
     const input: AssessInput = {
-      // New applicant has no member id, so the model uses only what is entered.
-      borrower_id: mode === "existing" ? borrowerId.trim() || undefined : undefined,
+      // Optional: a known member id pulls history; blank = new applicant (scored from entered details).
+      borrower_id: borrowerId.trim() || undefined,
       amount: Number(amount),
       savings: Number(savings) || 0,
       salary: salary.trim() ? Number(salary) : null,
@@ -68,8 +63,8 @@ export default function AssessRisk() {
     }
     setSubmitting(true);
     try {
-      const result = await assessRisk(input, token);
-      navigate("/assess/result", { state: { result, input } });
+      const app = await createApplication(input, token);   // assess + save as an application
+      navigate(`/applications/${app.id}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {
@@ -77,53 +72,30 @@ export default function AssessRisk() {
     }
   }
 
-  const tabClass = (active: boolean) =>
-    "rounded-md px-4 py-1.5 text-sm font-medium transition " +
-    (active ? "bg-brand text-white" : "text-slate hover:text-ink");
-
   return (
     <AppShell>
       <div className="mx-auto max-w-2xl">
         <h1 className="text-2xl font-bold text-ink">Assess a loan</h1>
         <p className="mt-1 text-sm text-slate">
-          Score a loan from the borrower's details and their guarantor network. Use an
-          existing client to pull their history, or a new applicant for someone not yet
-          in the system.
+          Score a loan from the borrower's details and their guarantor network. Enter an
+          existing member ID to pull their history, or leave it blank for a new applicant.
         </p>
 
-        {/* Mode toggle */}
-        <div className="mt-5 inline-flex rounded-lg border border-line bg-white p-1">
-          <button type="button" className={tabClass(mode === "existing")} onClick={() => setMode("existing")}>
-            Existing client
-          </button>
-          <button type="button" className={tabClass(mode === "new")} onClick={() => setMode("new")}>
-            New applicant
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
           {error && <Alert tone="error">{error}</Alert>}
 
           <section className="rounded-xl border border-line bg-white p-5">
             <h2 className="mb-4 text-sm font-semibold text-ink">Borrower and loan</h2>
 
-            {mode === "new" && (
-              <div className="mb-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate">
-                New applicant: not yet in the system, so there is no credit history on
-                file. The score uses the details you enter plus the guarantor network.
-              </div>
-            )}
-
             <div className="grid gap-4 sm:grid-cols-2">
-              {mode === "existing" && (
-                <TextField
-                  label="Borrower member ID"
-                  placeholder="e.g. Gasabo-335"
-                  icon={<UserIcon />}
-                  value={borrowerId}
-                  onChange={(e) => setBorrowerId(e.target.value)}
-                />
-              )}
+              <TextField
+                label="Borrower member ID"
+                placeholder="e.g. Gasabo-335"
+                icon={<UserIcon />}
+                value={borrowerId}
+                onChange={(e) => setBorrowerId(e.target.value)}
+                hint="Leave blank for a brand-new applicant."
+              />
               <TextField
                 label="Disbursement amount (RWF)"
                 type="number"

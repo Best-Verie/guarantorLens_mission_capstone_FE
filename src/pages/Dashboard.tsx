@@ -5,6 +5,8 @@ import { Button } from "../components/ui/Button";
 import { getUser, getToken } from "../lib/session";
 import { getEarlyWarning } from "../api/insights";
 import type { EarlyWarningItem } from "../api/insights";
+import { getApplicationStats } from "../api/applications";
+import type { ApplicationStats } from "../api/applications";
 
 const ROLE_LABELS: Record<string, string> = {
   loan_officer: "Loan officer",
@@ -23,13 +25,13 @@ export default function Dashboard() {
   const user = getUser();
   const [items, setItems] = useState<EarlyWarningItem[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [stats, setStats] = useState<ApplicationStats | null>(null);
 
   useEffect(() => {
     const token = getToken();
     if (!token) return;
-    getEarlyWarning(token)
-      .then(setItems)
-      .catch(() => setFailed(true));
+    getEarlyWarning(token).then(setItems).catch(() => setFailed(true));
+    getApplicationStats(token).then(setStats).catch(() => {});
   }, []);
 
   const highCount = items ? items.filter((i) => i.band === "High").length : 0;
@@ -46,7 +48,28 @@ export default function Dashboard() {
         </p>
       )}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="mt-8 grid gap-6 lg:grid-cols-3">
+        {/* Applications / escalation */}
+        <div className="rounded-xl border border-line bg-white p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-ink">Applications</h2>
+            <Link to="/applications" className="text-sm font-medium text-brand hover:underline">View all</Link>
+          </div>
+          <p className="mt-1 text-sm text-slate">Your assessments and the escalation queue.</p>
+          {stats && (
+            <div className="mt-4 flex gap-6">
+              <div>
+                <div className="text-2xl font-bold text-ink">{stats.my_open}</div>
+                <div className="text-xs text-slate">my open</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-amber-600">{stats.escalated}</div>
+                <div className="text-xs text-slate">escalated</div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Assess */}
         <div className="rounded-xl border border-line bg-white p-6">
           <h2 className="text-base font-semibold text-ink">Assess a loan</h2>

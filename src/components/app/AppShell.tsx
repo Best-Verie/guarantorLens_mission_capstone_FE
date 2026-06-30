@@ -8,6 +8,7 @@ import { clearSession, getUser } from "../../lib/session";
 const NAV = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/assess", label: "Assess risk" },
+  { to: "/applications", label: "Applications" },
   { to: "/members", label: "Members" },
   { to: "/network", label: "Network" },
   { to: "/watchlist", label: "Watchlist" },
