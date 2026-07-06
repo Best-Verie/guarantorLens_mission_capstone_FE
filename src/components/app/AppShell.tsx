@@ -10,9 +10,7 @@ const NAV = [
   { to: "/assess", label: "Assess risk" },
   { to: "/applications", label: "Applications" },
   { to: "/members", label: "Members" },
-  { to: "/network", label: "Network" },
-  { to: "/watchlist", label: "Watchlist" },
-  { to: "/early-warning", label: "Early warning" },
+  { to: "/monitoring", label: "Monitoring" },
   { to: "/insights", label: "Insights" },
 ];
 
@@ -21,6 +19,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const user = getUser();
+  // Admins get an extra nav entry for the admin console.
+  const nav = user?.role === "admin" ? [...NAV, { to: "/admin", label: "Admin" }] : NAV;
 
   function signOut() {
     clearSession();
@@ -33,7 +33,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-5xl items-center gap-6 px-6 py-3">
           <Logo theme="light" showSub={false} />
           <nav className="flex gap-1">
-            {NAV.map((n) => {
+            {nav.map((n) => {
               const active = pathname.startsWith(n.to);
               return (
                 <Link

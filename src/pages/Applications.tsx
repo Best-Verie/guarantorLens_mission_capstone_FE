@@ -19,6 +19,9 @@ const statusClass: Record<string, string> = {
   recommended: "bg-blue-100 text-blue-700",
   closed: "bg-emerald-100 text-emerald-700",
 };
+const STATUS_LABEL: Record<string, string> = {
+  assessed: "New", escalated: "Escalated", recommended: "Reviewed", closed: "Closed",
+};
 
 export default function Applications() {
   const navigate = useNavigate();
@@ -117,7 +120,7 @@ export default function Applications() {
                   </td>
                   <td className="px-4 py-2">
                     <span className={"rounded px-2 py-0.5 text-xs font-medium " + (statusClass[a.status] ?? "")}>
-                      {a.status}
+                      {STATUS_LABEL[a.status] ?? a.status}
                     </span>
                   </td>
                   {isManager && <td className="px-4 py-2 text-slate">{a.created_by_name}</td>}

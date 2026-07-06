@@ -11,18 +11,23 @@ import type { ApplicationOut } from "../api/applications";
 import { assessRisk } from "../api/risk";
 import type { AssessResult } from "../api/risk";
 import { ApiError } from "../api/http";
-import { getToken } from "../lib/session";
+import { getToken, getUser } from "../lib/session";
 
 const bandClass: Record<string, string> = {
   High: "bg-red-100 text-red-700",
   Medium: "bg-amber-100 text-amber-700",
   Low: "bg-emerald-100 text-emerald-700",
 };
+const STATUS_LABEL: Record<string, string> = {
+  assessed: "New", escalated: "Escalated", recommended: "Reviewed", closed: "Closed",
+};
 
 export default function ApplicationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const appId = Number(id);
+  const user = getUser();
+  const isOfficer = user?.role === "loan_officer";
   const [app, setApp] = useState<ApplicationOut | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -114,9 +119,12 @@ export default function ApplicationDetail() {
             </p>
           </div>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-            {app.status}
+            {STATUS_LABEL[app.status] ?? app.status}
           </span>
         </div>
+        <p className="mt-2 text-xs text-slate">
+          New = just assessed · Escalated = sent to a credit manager · Reviewed = a recommendation was added.
+        </p>
 
         {error && <div className="mt-4"><Alert tone="error">{error}</Alert></div>}
 
@@ -204,16 +212,27 @@ export default function ApplicationDetail() {
 
         {/* Escalation */}
         <section className="mt-6 rounded-xl border border-line bg-white p-5">
-          <h2 className="text-sm font-semibold text-ink">Escalate to credit staff</h2>
-          {app.escalation_note && (
-            <p className="mt-1 text-sm text-slate">Note on file: {app.escalation_note}</p>
+          <h2 className="text-sm font-semibold text-ink">Escalation</h2>
+          {app.status === "escalated" ? (
+            <p className="mt-1 text-sm text-amber-700">
+              Escalated to a credit manager for review
+              {app.escalation_note ? `: "${app.escalation_note}"` : ""}.
+            </p>
+          ) : isOfficer ? (
+            <>
+              <p className="mt-1 text-sm text-slate">
+                Send this application to a credit manager to review.
+              </p>
+              <textarea className="mt-2 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink"
+                        rows={2} placeholder="Why are you escalating? (optional)"
+                        value={escNote} onChange={(e) => setEscNote(e.target.value)} />
+              <Button variant="secondary" onClick={doEscalate} disabled={busy} className="mt-2">
+                Escalate
+              </Button>
+            </>
+          ) : (
+            <p className="mt-1 text-sm text-slate">Not escalated.</p>
           )}
-          <textarea className="mt-2 w-full rounded-lg border border-line px-3 py-2 text-sm text-ink"
-                    rows={2} placeholder="Why are you escalating? (optional)"
-                    value={escNote} onChange={(e) => setEscNote(e.target.value)} />
-          <Button variant="secondary" onClick={doEscalate} disabled={busy} className="mt-2">
-            {app.status === "escalated" ? "Re-escalate" : "Escalate"}
-          </Button>
         </section>
 
         {/* Recommendations */}

@@ -10,11 +10,11 @@ import AssessReport from "./pages/AssessReport";
 import Member from "./pages/Member";
 import MemberLookup from "./pages/MemberLookup";
 import NetworkExplorer from "./pages/NetworkExplorer";
-import Watchlist from "./pages/Watchlist";
-import EarlyWarning from "./pages/EarlyWarning";
 import Insights from "./pages/Insights";
 import Applications from "./pages/Applications";
 import ApplicationDetail from "./pages/ApplicationDetail";
+import Monitoring from "./pages/Monitoring";
+import Admin from "./pages/Admin";
 import { RequireAuth } from "./components/auth/RequireAuth";
 
 export default function App() {
@@ -35,8 +35,10 @@ export default function App() {
         <Route path="/members" element={<RequireAuth><MemberLookup /></RequireAuth>} />
         <Route path="/member/:id" element={<RequireAuth><Member /></RequireAuth>} />
         <Route path="/network" element={<RequireAuth><NetworkExplorer /></RequireAuth>} />
-        <Route path="/watchlist" element={<RequireAuth><Watchlist /></RequireAuth>} />
-        <Route path="/early-warning" element={<RequireAuth><EarlyWarning /></RequireAuth>} />
+        <Route path="/monitoring" element={<RequireAuth><Monitoring /></RequireAuth>} />
+        <Route path="/admin" element={<RequireAuth><Admin /></RequireAuth>} />
+        <Route path="/watchlist" element={<Navigate to="/monitoring" replace />} />
+        <Route path="/early-warning" element={<Navigate to="/monitoring" replace />} />
         <Route path="/insights" element={<RequireAuth><Insights /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

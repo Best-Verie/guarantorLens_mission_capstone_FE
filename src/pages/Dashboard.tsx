@@ -86,7 +86,7 @@ export default function Dashboard() {
         <div className="rounded-xl border border-line bg-white p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-ink">Early warning</h2>
-            <Link to="/early-warning" className="text-sm font-medium text-brand hover:underline">
+            <Link to="/monitoring" className="text-sm font-medium text-brand hover:underline">
               View all
             </Link>
           </div>

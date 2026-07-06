@@ -68,3 +68,30 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
   return data as T;
 }
+
+/** Multipart POST (file uploads). Does not set Content-Type so the browser adds
+ *  the multipart boundary. Longer timeout because model bundles are large. */
+export async function requestForm<T>(path: string, form: FormData, token?: string): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let res: Response;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 120000);
+  try {
+    res = await fetch(`${API_URL}${path}`, { method: "POST", headers, body: form, signal: ctrl.signal });
+  } catch (e) {
+    const msg =
+      e instanceof DOMException && e.name === "AbortError"
+        ? "The upload took too long. The server may be starting up; try again."
+        : "Could not reach the server.";
+    throw new ApiError(0, msg);
+  } finally {
+    clearTimeout(timer);
+  }
+
+  const isJson = res.headers.get("content-type")?.includes("application/json");
+  const data = isJson ? await res.json().catch(() => null) : null;
+  if (!res.ok) throw new ApiError(res.status, readError(res.status, data));
+  return data as T;
+}
