@@ -30,6 +30,7 @@ export interface AssessResult {
   shap: ShapContribution[];
   flags: string[];
   network: NetworkInfo;
+  uids: Record<string, string>;   // account number -> opaque url id (borrower + guarantors)
 }
 
 export interface AssessInput {

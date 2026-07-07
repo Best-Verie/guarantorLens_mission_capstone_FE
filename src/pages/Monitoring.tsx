@@ -81,7 +81,7 @@ export default function Monitoring() {
                     <tr key={it.loan_key}>
                       <td className="px-4 py-2 font-mono text-ink">{it.loan_key}</td>
                       <td className="px-4 py-2">
-                        <Link to={`/member/${encodeURIComponent(it.borrower)}`} className="font-mono text-brand hover:underline">{it.borrower}</Link>
+                        <Link to={`/member/${encodeURIComponent(it.borrower_uid ?? it.borrower)}`} className="font-mono text-brand hover:underline">{it.borrower}</Link>
                       </td>
                       <td className="px-4 py-2 text-slate">{it.branch}</td>
                       <td className="px-4 py-2 font-mono text-ink">{rwf(it.amount)}</td>
@@ -125,7 +125,7 @@ export default function Monitoring() {
                     <tr key={it.loan_key}>
                       <td className="px-4 py-2 font-mono text-ink">{it.loan_key}</td>
                       <td className="px-4 py-2">
-                        <Link to={`/member/${encodeURIComponent(it.borrower)}`} className="font-mono text-brand hover:underline">{it.borrower}</Link>
+                        <Link to={`/member/${encodeURIComponent(it.borrower_uid ?? it.borrower)}`} className="font-mono text-brand hover:underline">{it.borrower}</Link>
                       </td>
                       <td className="px-4 py-2 text-slate">{it.branch}</td>
                       <td className="px-4 py-2 font-mono text-ink">{rwf(it.amount)}</td>

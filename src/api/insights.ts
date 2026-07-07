@@ -4,6 +4,7 @@ import { request } from "./http";
 export interface WatchlistItem {
   loan_key: string;
   borrower: string;
+  borrower_uid?: string | null;
   branch?: string | null;
   amount: number;
   days_in_arrears: number;
@@ -12,6 +13,7 @@ export interface WatchlistItem {
 
 export interface SuperGuarantor {
   member_id: string;
+  uid?: string | null;
   branch?: string | null;
   loans_backed: number;
   ever_defaulted: boolean;
@@ -40,6 +42,7 @@ export function getCommunities(token: string): Promise<CommunityStat[]> {
 export interface EarlyWarningItem {
   loan_key: string;
   borrower: string;
+  borrower_uid?: string | null;
   branch?: string | null;
   amount: number;
   days_in_arrears: number;

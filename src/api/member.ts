@@ -29,6 +29,8 @@ export interface NetEdge {
 
 export interface MemberDetail {
   member_id: string;
+  uid?: string | null;
+  uids: Record<string, string>;   // account number -> opaque url id, for links on this page
   branch?: string | null;
   savings?: number | null;
   salary?: number | null;

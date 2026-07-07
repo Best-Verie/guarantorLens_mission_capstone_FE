@@ -26,7 +26,8 @@ export default function SignIn() {
     try {
       const res = await login({ email, password });
       saveSession(res.access_token, res.user);
-      navigate("/dashboard", { replace: true });
+      // Admins are IT staff: land them straight in the admin console.
+      navigate(res.user.role === "admin" ? "/admin" : "/dashboard", { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {

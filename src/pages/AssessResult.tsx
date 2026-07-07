@@ -59,7 +59,7 @@ export default function AssessResult() {
               <>
                 Borrower{" "}
                 <Link
-                  to={`/member/${encodeURIComponent(input.borrower_id)}`}
+                  to={`/member/${encodeURIComponent(result.uids[input.borrower_id] ?? input.borrower_id)}`}
                   className="font-mono text-brand hover:underline"
                 >
                   {input.borrower_id}
@@ -159,7 +159,7 @@ export default function AssessResult() {
                 {input.guarantor_ids.map((g) => (
                   <Link
                     key={g}
-                    to={`/member/${encodeURIComponent(g)}`}
+                    to={`/member/${encodeURIComponent(result.uids[g] ?? g)}`}
                     className="font-mono text-brand hover:underline"
                   >
                     {g}

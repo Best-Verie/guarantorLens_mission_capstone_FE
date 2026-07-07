@@ -25,10 +25,11 @@ function outcomeClass(outcome: string): string {
   return "bg-red-50 text-red-600"; // Written off / At risk
 }
 
-function MemberChip({ id }: { id: string }) {
+function MemberChip({ id, uid }: { id: string; uid?: string }) {
+  // Display the account number, but link with the opaque uid so URLs never carry it.
   return (
     <Link
-      to={`/member/${encodeURIComponent(id)}`}
+      to={`/member/${encodeURIComponent(uid ?? id)}`}
       className="rounded-lg border border-line bg-white px-2.5 py-1 font-mono text-xs text-brand hover:bg-brand-50"
     >
       {id}
@@ -40,10 +41,12 @@ function NetworkGraph({
   nodes,
   edges,
   center,
+  uids,
 }: {
   nodes: NetNode[];
   edges: NetEdge[];
   center: string;
+  uids: Record<string, string>;
 }) {
   const navigate = useNavigate();
   const backers = nodes.filter((n) => n.role === "backer").slice(0, 12);
@@ -99,7 +102,7 @@ function NetworkGraph({
             <g
               key={n.id}
               className={n.id === center ? "" : "cursor-pointer"}
-              onClick={() => n.id !== center && navigate(`/member/${encodeURIComponent(n.id)}`)}
+              onClick={() => n.id !== center && navigate(`/member/${encodeURIComponent(uids[n.id] ?? n.id)}`)}
             >
               {n.ever_defaulted && (
                 <circle cx={p.x} cy={p.y} r={r + 3} fill="none" stroke="#DC2626" strokeWidth="2" />
@@ -133,12 +136,16 @@ export default function Member() {
     setError(null);
     setMember(null);
     getMember(id, token)
-      .then(setMember)
+      .then((data) => {
+        setMember(data);
+        // If we arrived by account number (typed lookup or old link), clean the URL to the uid.
+        if (data.uid && id !== data.uid) navigate(`/member/${data.uid}`, { replace: true });
+      })
       .catch((err) =>
         setError(
           err instanceof ApiError
             ? err.status === 404
-              ? `No member found with ID "${id}".`
+              ? "No member found for that id."
               : err.message
             : "Something went wrong."
         )
@@ -153,7 +160,7 @@ export default function Member() {
     <AppShell>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="font-mono text-2xl font-bold text-ink">{id}</h1>
+          <h1 className="font-mono text-2xl font-bold text-ink">{member?.member_id ?? "Member"}</h1>
           <p className="mt-1 text-sm text-slate">Member profile, loans, and network</p>
         </div>
         <Button variant="secondary" onClick={() => navigate("/members")}>
@@ -228,7 +235,7 @@ export default function Member() {
                         <td className="px-4 py-2">
                           <div className="flex flex-wrap gap-1.5">
                             {ln.guarantors.map((g) => (
-                              <MemberChip key={g} id={g} />
+                              <MemberChip key={g} id={g} uid={member.uids[g]} />
                             ))}
                           </div>
                         </td>
@@ -251,7 +258,7 @@ export default function Member() {
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {member.backers.map((b) => (
-                    <MemberChip key={b} id={b} />
+                    <MemberChip key={b} id={b} uid={member.uids[b]} />
                   ))}
                 </div>
               )}
@@ -267,7 +274,7 @@ export default function Member() {
                 <ul className="flex flex-col gap-1.5 text-sm">
                   {member.guarantees_given.slice(0, 12).map((g) => (
                     <li key={g.loan_key} className="flex items-center gap-2">
-                      <MemberChip id={g.borrower} />
+                      <MemberChip id={g.borrower} uid={member.uids[g.borrower]} />
                       <span className={cn("rounded px-2 py-0.5 text-xs font-medium", outcomeClass(g.outcome))}>
                         {g.outcome}
                       </span>
@@ -291,6 +298,7 @@ export default function Member() {
                 nodes={member.network.nodes}
                 edges={member.network.edges}
                 center={member.member_id}
+                uids={member.uids}
               />
             </div>
           </section>

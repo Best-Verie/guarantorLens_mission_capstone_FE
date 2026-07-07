@@ -138,7 +138,7 @@ export default function Insights() {
                       <tr key={m.member_id}>
                         <td className="px-4 py-2">
                           <Link
-                            to={`/member/${encodeURIComponent(m.member_id)}`}
+                            to={`/member/${encodeURIComponent(m.uid ?? m.member_id)}`}
                             className={`font-mono hover:underline ${m.ever_defaulted ? "text-red-600" : "text-brand"}`}
                           >
                             {m.member_id}

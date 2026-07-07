@@ -121,7 +121,7 @@ export default function Dashboard() {
                 {items.slice(0, 5).map((it) => (
                   <li key={it.loan_key} className="flex items-center justify-between py-2 text-sm">
                     <Link
-                      to={`/member/${encodeURIComponent(it.borrower)}`}
+                      to={`/member/${encodeURIComponent(it.borrower_uid ?? it.borrower)}`}
                       className="font-mono text-brand hover:underline"
                     >
                       {it.borrower}
