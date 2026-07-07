@@ -2,6 +2,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
 import { ScoreGauge } from "../components/app/ScoreGauge";
+import { ScoreDrivers } from "../components/app/ScoreDrivers";
 import { cn } from "../lib/cn";
 import type { AssessInput, AssessResult, Reason } from "../api/risk";
 
@@ -114,7 +115,11 @@ export default function AssessResult() {
             })}
           </div>
 
-          <h2 className="mt-6 text-sm font-semibold text-ink">Why this score</h2>
+          {result.shap.length > 0 && <div className="mt-6"><ScoreDrivers shap={result.shap} /></div>}
+
+          <h2 className="mt-6 text-sm font-semibold text-ink">
+            {result.shap.length > 0 ? "In plain language" : "Why this score"}
+          </h2>
           <ul className="mt-1 divide-y divide-line">
             {result.reasons.length > 0 ? (
               result.reasons.map((r) => <ReasonRow key={r.label} r={r} />)

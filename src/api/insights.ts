@@ -50,3 +50,27 @@ export interface EarlyWarningItem {
 export function getEarlyWarning(token: string): Promise<EarlyWarningItem[]> {
   return request<EarlyWarningItem[]>("/insights/early-warning", { token });
 }
+
+export interface InsightsOverview {
+  n_loans: number;
+  n_members: number;
+  total_disbursed: number;
+  outcomes: Record<string, number>;
+  branches: Record<string, number>;
+  bad_rate: number;
+  written_off_value: number;
+  n_arrears: number;
+  arrears_value: number;
+  unique_guarantors: number;
+  avg_guarantors: number;
+  over_committed: number;
+  ever_defaulted: number;
+  loans_backed_by_defaulter: number;
+  pct_backed_by_defaulter: number;
+  n_communities: number;
+  worst_community_rate: number;
+}
+
+export function getOverview(token: string): Promise<InsightsOverview> {
+  return request<InsightsOverview>("/insights/overview", { token });
+}

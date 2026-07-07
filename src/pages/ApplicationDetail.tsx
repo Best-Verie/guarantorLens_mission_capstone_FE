@@ -4,12 +4,13 @@ import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
 import { Alert } from "../components/ui/Alert";
 import { ScoreGauge } from "../components/app/ScoreGauge";
+import { ScoreDrivers } from "../components/app/ScoreDrivers";
 import {
   getApplication, escalateApplication, addRecommendation,
 } from "../api/applications";
 import type { ApplicationOut } from "../api/applications";
 import { assessRisk } from "../api/risk";
-import type { AssessResult } from "../api/risk";
+import type { AssessResult, ShapContribution } from "../api/risk";
 import { ApiError } from "../api/http";
 import { getToken, getUser } from "../lib/session";
 
@@ -29,6 +30,7 @@ export default function ApplicationDetail() {
   const user = getUser();
   const isOfficer = user?.role === "loan_officer";
   const [app, setApp] = useState<ApplicationOut | null>(null);
+  const [drivers, setDrivers] = useState<ShapContribution[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -56,6 +58,15 @@ export default function ApplicationDetail() {
         setWfSavings(String(a.savings ?? 0));
         setWfSalary(a.salary != null ? String(a.salary) : "");
         setWfGuar(a.guarantor_ids.join(", "));
+        // The model drivers (SHAP) are not stored on the application, so recompute
+        // them from the saved inputs to show what pushed the score up or down.
+        assessRisk({
+          borrower_id: a.borrower_id || undefined,
+          amount: a.amount,
+          savings: a.savings ?? 0,
+          salary: a.salary ?? null,
+          guarantor_ids: a.guarantor_ids,
+        }, token).then((res) => setDrivers(res.shap)).catch(() => {});
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : "Something went wrong."))
       .finally(() => setLoading(false));
@@ -195,10 +206,17 @@ export default function ApplicationDetail() {
           </section>
         </div>
 
+        {/* Model drivers (SHAP), when the model exposes them */}
+        {drivers.length > 0 && (
+          <section className="mt-6 rounded-xl border border-line bg-white p-5">
+            <ScoreDrivers shap={drivers} />
+          </section>
+        )}
+
         {/* Why this score (full width) */}
         {app.reasons.length > 0 && (
           <section className="mt-6 rounded-xl border border-line bg-white p-5">
-            <h3 className="text-sm font-semibold text-ink">Why this score</h3>
+            <h3 className="text-sm font-semibold text-ink">Why this score (in plain language)</h3>
             <ul className="mt-1 space-y-1 text-sm">
               {app.reasons.map((r) => (
                 <li key={r.label} className="text-ink">

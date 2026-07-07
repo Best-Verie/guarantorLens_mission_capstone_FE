@@ -14,10 +14,12 @@ const bandClass: Record<string, string> = {
 };
 
 type Tab = "early" | "overdue";
+const PAGE_SIZE = 15;
 
 export default function Monitoring() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("early");
+  const [page, setPage] = useState(1);
   const [early, setEarly] = useState<EarlyWarningItem[] | null>(null);
   const [watch, setWatch] = useState<WatchlistItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +30,9 @@ export default function Monitoring() {
     getEarlyWarning(token).then(setEarly).catch((e) => setError(e instanceof ApiError ? e.message : "Something went wrong."));
     getWatchlist(token).then(setWatch).catch(() => {});
   }, [navigate]);
+
+  function switchTab(t: Tab) { setTab(t); setPage(1); }
+  const paged = <T,>(list: T[]) => list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const rwf = (n: number) => "RWF " + Math.round(n).toLocaleString("en-US");
   const tabClass = (active: boolean) =>
@@ -41,10 +46,10 @@ export default function Monitoring() {
       </p>
 
       <div className="mt-5 inline-flex rounded-lg border border-line bg-white p-1">
-        <button className={tabClass(tab === "early")} onClick={() => setTab("early")}>
+        <button className={tabClass(tab === "early")} onClick={() => switchTab("early")}>
           Predicted risk {early ? `(${early.filter((i) => i.band === "High").length} high)` : ""}
         </button>
-        <button className={tabClass(tab === "overdue")} onClick={() => setTab("overdue")}>
+        <button className={tabClass(tab === "overdue")} onClick={() => switchTab("overdue")}>
           Overdue now {watch ? `(${watch.length})` : ""}
         </button>
       </div>
@@ -72,7 +77,7 @@ export default function Monitoring() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
-                  {early.map((it) => (
+                  {paged(early).map((it) => (
                     <tr key={it.loan_key}>
                       <td className="px-4 py-2 font-mono text-ink">{it.loan_key}</td>
                       <td className="px-4 py-2">
@@ -91,6 +96,7 @@ export default function Monitoring() {
               </table>
             </div>
           )}
+          {early && <Pager page={page} total={early.length} onPage={setPage} />}
         </>
       )}
 
@@ -115,7 +121,7 @@ export default function Monitoring() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
-                  {watch.map((it) => (
+                  {paged(watch).map((it) => (
                     <tr key={it.loan_key}>
                       <td className="px-4 py-2 font-mono text-ink">{it.loan_key}</td>
                       <td className="px-4 py-2">
@@ -136,8 +142,38 @@ export default function Monitoring() {
               </table>
             </div>
           )}
+          {watch && <Pager page={page} total={watch.length} onPage={setPage} />}
         </>
       )}
     </AppShell>
+  );
+}
+
+function Pager({ page, total, onPage }: { page: number; total: number; onPage: (p: number) => void }) {
+  if (total <= PAGE_SIZE) return null;
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const start = (page - 1) * PAGE_SIZE + 1;
+  const end = Math.min(total, page * PAGE_SIZE);
+  return (
+    <div className="mt-3 flex items-center justify-between text-sm">
+      <span className="text-slate">Showing {start}&ndash;{end} of {total}</span>
+      <div className="flex items-center gap-2">
+        <button
+          disabled={page <= 1}
+          onClick={() => onPage(page - 1)}
+          className="rounded-lg border border-line px-3 py-1 text-ink hover:bg-slate-50 disabled:opacity-40"
+        >
+          Prev
+        </button>
+        <span className="px-1 text-slate">Page {page} / {pages}</span>
+        <button
+          disabled={page >= pages}
+          onClick={() => onPage(page + 1)}
+          className="rounded-lg border border-line px-3 py-1 text-ink hover:bg-slate-50 disabled:opacity-40"
+        >
+          Next
+        </button>
+      </div>
+    </div>
   );
 }
