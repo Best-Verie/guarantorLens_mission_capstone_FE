@@ -19,6 +19,7 @@ export interface ShapContribution {
   label: string;
   value: number;
   direction: "up" | "down";
+  kind?: "individual" | "network";
 }
 
 export interface AssessResult {
