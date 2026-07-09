@@ -25,6 +25,8 @@ export default function AssessRisk() {
   const [guarantors, setGuarantors] = useState<string[]>([]);
   const [guarantorInput, setGuarantorInput] = useState("");
   const [exampleId, setExampleId] = useState("");
+  // Optional up-to-date guarantor details the officer can enter (id -> raw string fields).
+  const [gOv, setGOv] = useState<Record<string, { savings?: string; salary?: string; loans_backed?: string }>>({});
 
   // Prefill a real, ready-to-run example from the deployed data (works with any dataset).
   useEffect(() => {
@@ -61,6 +63,20 @@ export default function AssessRisk() {
     setGuarantors(guarantors.filter((g) => g !== id));
   }
 
+  function buildOverrides(): Record<string, { savings?: number; salary?: number; loans_backed?: number }> | undefined {
+    const out: Record<string, { savings?: number; salary?: number; loans_backed?: number }> = {};
+    for (const id of guarantors) {
+      const o = gOv[id];
+      if (!o) continue;
+      const entry: { savings?: number; salary?: number; loans_backed?: number } = {};
+      if (o.savings?.trim()) entry.savings = Number(o.savings);
+      if (o.salary?.trim()) entry.salary = Number(o.salary);
+      if (o.loans_backed?.trim()) entry.loans_backed = Number(o.loans_backed);
+      if (Object.keys(entry).length) out[id] = entry;
+    }
+    return Object.keys(out).length ? out : undefined;
+  }
+
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -77,6 +93,7 @@ export default function AssessRisk() {
       salary: salary.trim() ? Number(salary) : null,
       interest_rate: interestRate.trim() ? Number(interestRate) : null,
       guarantor_ids: guarantors,
+      guarantor_overrides: buildOverrides(),
     };
     if (!input.amount || input.amount <= 0) {
       setError("Enter a loan amount.");
@@ -179,23 +196,41 @@ export default function AssessRisk() {
             </div>
 
             <div className="mt-3 flex flex-col gap-2">
-              {guarantors.map((g) => (
-                <div
-                  key={g}
-                  className="flex items-center justify-between rounded-lg border border-line px-3 py-2"
-                >
-                  <span className="font-mono text-sm text-ink">{g}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeGuarantor(g)}
-                    className="text-sm font-medium text-slate hover:text-red-600"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
+              {guarantors.map((g) => {
+                const o = gOv[g] ?? {};
+                const set = (k: "savings" | "salary" | "loans_backed", v: string) =>
+                  setGOv((prev) => ({ ...prev, [g]: { ...prev[g], [k]: v } }));
+                return (
+                  <div key={g} className="rounded-lg border border-line px-3 py-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-sm text-ink">{g}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeGuarantor(g)}
+                        className="text-sm font-medium text-slate hover:text-red-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <input className="rounded-lg border border-line bg-white px-2 py-1.5 text-sm text-ink" type="number"
+                             placeholder="savings" value={o.savings ?? ""} onChange={(e) => set("savings", e.target.value)} />
+                      <input className="rounded-lg border border-line bg-white px-2 py-1.5 text-sm text-ink" type="number"
+                             placeholder="salary" value={o.salary ?? ""} onChange={(e) => set("salary", e.target.value)} />
+                      <input className="rounded-lg border border-line bg-white px-2 py-1.5 text-sm text-ink" type="number"
+                             placeholder="loans backed" value={o.loans_backed ?? ""} onChange={(e) => set("loans_backed", e.target.value)} />
+                    </div>
+                  </div>
+                );
+              })}
               {guarantors.length === 0 && (
                 <p className="text-sm text-slate">No guarantors added yet.</p>
+              )}
+              {guarantors.length > 0 && (
+                <p className="text-xs text-slate">
+                  Optional: enter a guarantor's up-to-date savings, salary, or how many loans they back.
+                  Leave blank to use the values on file.
+                </p>
               )}
             </div>
           </section>

@@ -39,6 +39,43 @@ export function getCommunities(token: string): Promise<CommunityStat[]> {
   return request<CommunityStat[]>("/insights/communities", { token });
 }
 
+export interface WeakLink {
+  member_id: string;
+  uid?: string | null;
+  branch?: string | null;
+  ever_defaulted: boolean;
+  loans_backed: number;
+  high_risk: number;
+  exposure: number;
+}
+
+export function getWeakLinks(token: string, limit = 12): Promise<WeakLink[]> {
+  return request<WeakLink[]>(`/insights/weak-links?limit=${limit}`, { token });
+}
+
+export interface ContagionLoan {
+  loan_key: string;
+  borrower: string;
+  borrower_uid?: string | null;
+  amount: number;
+  band: "Low" | "Medium" | "High";
+  score: number;
+}
+
+export interface Contagion {
+  member_id: string;
+  uid?: string | null;
+  loans_backed: number;
+  high_risk: number;
+  medium_risk: number;
+  exposure: number;
+  loans: ContagionLoan[];
+}
+
+export function getContagion(ref: string, token: string): Promise<Contagion> {
+  return request<Contagion>(`/member/${encodeURIComponent(ref)}/contagion`, { token });
+}
+
 export interface EarlyWarningItem {
   loan_key: string;
   borrower: string;

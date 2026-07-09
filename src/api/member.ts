@@ -57,6 +57,38 @@ export function getExamples(token: string): Promise<MemberExamples> {
   return request<MemberExamples>("/members/examples", { token });
 }
 
+export interface MemberRow {
+  member_id: string;
+  uid?: string | null;
+  branch?: string | null;
+  savings?: number | null;
+  salary?: number | null;
+  loans_backed: number;
+  ever_defaulted: boolean;
+}
+
+export interface MemberList {
+  items: MemberRow[];
+  total: number;
+  page: number;
+  page_size: number;
+  branches: string[];
+}
+
+export function listMembers(
+  params: { q?: string; branch?: string; sort?: string; order?: string; page?: number; page_size?: number },
+  token: string
+): Promise<MemberList> {
+  const qs = new URLSearchParams();
+  if (params.q) qs.set("q", params.q);
+  if (params.branch) qs.set("branch", params.branch);
+  if (params.sort) qs.set("sort", params.sort);
+  if (params.order) qs.set("order", params.order);
+  qs.set("page", String(params.page ?? 1));
+  qs.set("page_size", String(params.page_size ?? 25));
+  return request<MemberList>(`/members?${qs.toString()}`, { token });
+}
+
 export function getMember(id: string, token: string): Promise<MemberDetail> {
   return request<MemberDetail>(`/member/${encodeURIComponent(id)}`, { token });
 }

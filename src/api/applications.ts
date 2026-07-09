@@ -1,6 +1,6 @@
 /** Loan-application workflow API: create+assess, list, escalate, recommend. */
 import { request } from "./http";
-import type { Reason } from "./risk";
+import type { Reason, GuarantorOverride } from "./risk";
 
 export interface RecommendationOut {
   id: number;
@@ -22,6 +22,7 @@ export interface ApplicationOut {
   salary?: number | null;
   interest_rate?: number | null;
   guarantor_ids: string[];
+  guarantor_overrides?: Record<string, GuarantorOverride> | null;
   risk_score?: number | null;
   band?: "Low" | "Medium" | "High" | null;
   probability?: number | null;
@@ -58,6 +59,7 @@ export interface ApplicationCreate {
   salary?: number | null;
   interest_rate?: number | null;
   guarantor_ids: string[];
+  guarantor_overrides?: Record<string, GuarantorOverride>;
   borrower_id?: string;
   borrower_name?: string;
   branch?: string;

@@ -6,8 +6,16 @@ import { Alert } from "../components/ui/Alert";
 import { cn } from "../lib/cn";
 import { getMember } from "../api/member";
 import type { MemberDetail, NetEdge, NetNode } from "../api/member";
+import { getContagion } from "../api/insights";
+import type { Contagion } from "../api/insights";
 import { ApiError } from "../api/http";
 import { getToken } from "../lib/session";
+
+const bandChip: Record<string, string> = {
+  High: "bg-red-100 text-red-700",
+  Medium: "bg-amber-100 text-amber-700",
+  Low: "bg-emerald-100 text-emerald-700",
+};
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
@@ -123,6 +131,7 @@ export default function Member() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const [member, setMember] = useState<MemberDetail | null>(null);
+  const [contagion, setContagion] = useState<Contagion | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -140,6 +149,10 @@ export default function Member() {
         setMember(data);
         // If we arrived by account number (typed lookup or old link), clean the URL to the uid.
         if (data.uid && id !== data.uid) navigate(`/member/${data.uid}`, { replace: true });
+        setContagion(null);
+        if (data.loans_backed > 0) {
+          getContagion(data.uid ?? id, token).then(setContagion).catch(() => {});
+        }
       })
       .catch((err) =>
         setError(
@@ -201,6 +214,51 @@ export default function Member() {
               />
             </div>
           </section>
+
+          {/* Risk contagion: what is exposed if this member (as guarantor) fails */}
+          {contagion && contagion.loans_backed > 0 && (
+            <section className="mb-6">
+              <h2 className="mb-2 text-sm font-semibold text-ink">If this member fails, what is exposed?</h2>
+              <div className="rounded-xl border border-line bg-white p-5">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                  <Stat label="Loans backed" value={String(contagion.loans_backed)} hint="Guarantees they carry" />
+                  <Stat label="Total exposure" value={rwf(contagion.exposure)} hint="Sum of those loans" />
+                  <Stat label="High risk" value={String(contagion.high_risk)} hint="Of the backed loans" />
+                  <Stat label="Medium risk" value={String(contagion.medium_risk)} hint="Of the backed loans" />
+                </div>
+                <p className="mt-3 text-xs text-slate">
+                  This is the ripple behind the network: if {member.member_id} could not cover their guarantees,
+                  these {contagion.loans_backed} loans would lose a backer at once.
+                </p>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="text-left text-xs uppercase tracking-wide text-slate">
+                      <tr>
+                        <th className="py-2 pr-4 font-medium">Borrower</th>
+                        <th className="py-2 pr-4 font-medium">Amount</th>
+                        <th className="py-2 font-medium">Current risk</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {contagion.loans.map((ln) => (
+                        <tr key={ln.loan_key} className="border-t border-line">
+                          <td className="py-2 pr-4">
+                            <MemberChip id={ln.borrower} uid={ln.borrower_uid ?? undefined} />
+                          </td>
+                          <td className="py-2 pr-4 font-mono text-ink">{rwf(ln.amount)}</td>
+                          <td className="py-2">
+                            <span className={cn("rounded px-2 py-0.5 text-xs font-medium", bandChip[ln.band] ?? "")}>
+                              {ln.band}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* Loans as borrower */}
           <section className="mb-6">

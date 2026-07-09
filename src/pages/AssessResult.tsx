@@ -1,10 +1,19 @@
+import { useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
 import { ScoreGauge } from "../components/app/ScoreGauge";
 import { ScoreDrivers } from "../components/app/ScoreDrivers";
 import { cn } from "../lib/cn";
-import type { AssessInput, AssessResult, Reason } from "../api/risk";
+import { suggestGuarantors } from "../api/risk";
+import type { AssessInput, AssessResult, Reason, SuggestResult } from "../api/risk";
+import { getToken } from "../lib/session";
+
+const bandChipCls: Record<string, string> = {
+  High: "bg-red-100 text-red-700",
+  Medium: "bg-amber-100 text-amber-700",
+  Low: "bg-emerald-100 text-emerald-700",
+};
 
 function ReasonRow({ r }: { r: Reason }) {
   const up = r.direction === "up";
@@ -48,6 +57,14 @@ export default function AssessResult() {
   const { result, input } = state;
   const rwf = (n?: number | null) =>
     n == null ? "not on file" : "RWF " + Math.round(n).toLocaleString("en-US");
+
+  // For a Medium/High loan, ask the advisor how to make it more bankable.
+  const [suggest, setSuggest] = useState<SuggestResult | null>(null);
+  useEffect(() => {
+    const token = getToken();
+    if (!token || result.band === "Low") return;
+    suggestGuarantors(input, token).then(setSuggest).catch(() => {});
+  }, [input, result.band]);
 
   return (
     <AppShell>
@@ -101,6 +118,12 @@ export default function AssessResult() {
 
         {/* Reasons + flags */}
         <section className="rounded-xl border border-line bg-white p-6 lg:col-span-2">
+          {result.brief && (
+            <div className="mb-5 rounded-lg border-l-4 border-brand bg-brand-50/60 px-4 py-3">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">Officer brief</h2>
+              <p className="mt-1 text-sm leading-relaxed text-ink">{result.brief}</p>
+            </div>
+          )}
           <h2 className="text-sm font-semibold text-ink">Guarantor-network flags</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {result.flags.map((f) => {
@@ -148,6 +171,40 @@ export default function AssessResult() {
           )}
         </section>
       </div>
+
+      {/* Guarantor fix-it advisor (Medium/High loans) */}
+      {suggest && suggest.suggestions.length > 0 && (
+        <section className="mt-5 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 p-6">
+          <h2 className="text-sm font-semibold text-ink">How to make this loan more bankable</h2>
+          <p className="mt-1 text-sm text-slate">
+            The current guarantee scores <span className="font-semibold">{suggest.current.band} {suggest.current.score}/100</span>.
+            {suggest.weakest_current && <> The weakest current backer is <span className="font-mono">{suggest.weakest_current}</span>.</>}
+            {" "}A single change would lower the risk:
+          </p>
+          <ul className="mt-3 space-y-2">
+            {suggest.suggestions.map((s, i) => (
+              <li key={i} className="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm">
+                <span className="text-emerald-700">&rarr;</span>
+                {s.action === "swap" ? (
+                  <span>Swap out <span className="font-mono text-red-600">{s.remove}</span> for <span className="font-mono text-brand">{s.add}</span></span>
+                ) : (
+                  <span>Add <span className="font-mono text-brand">{s.add}</span> as a guarantor</span>
+                )}
+                <span className="text-xs text-slate">
+                  ({rwf(s.add_savings)} savings, backs {s.add_loans_backed})
+                </span>
+                <span className="ml-auto flex items-center gap-2">
+                  <span className={cn("rounded px-2 py-0.5 text-xs font-medium", bandChipCls[s.new_band] ?? "")}>
+                    {s.new_band} {s.new_score}/100
+                  </span>
+                  <span className="text-xs font-medium text-emerald-700">{s.delta}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-slate">Real members from the book, re-scored by the model. A suggestion to help you decide, not a decision.</p>
+        </section>
+      )}
 
       {/* Loan summary */}
       <section className="mt-5 rounded-xl border border-line bg-white p-6">

@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/app/AppShell";
 import { Alert } from "../components/ui/Alert";
-import { getCommunities, getSuperGuarantors, getOverview } from "../api/insights";
-import type { CommunityStat, SuperGuarantor, InsightsOverview } from "../api/insights";
+import { getCommunities, getWeakLinks, getOverview } from "../api/insights";
+import type { CommunityStat, WeakLink, InsightsOverview } from "../api/insights";
 import { ApiError } from "../api/http";
 import { getToken } from "../lib/session";
 
@@ -24,7 +24,7 @@ const OUTCOME_COLOR: Record<string, string> = {
 export default function Insights() {
   const navigate = useNavigate();
   const [ov, setOv] = useState<InsightsOverview | null>(null);
-  const [sg, setSg] = useState<SuperGuarantor[]>([]);
+  const [wl, setWl] = useState<WeakLink[]>([]);
   const [comm, setComm] = useState<CommunityStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,10 +35,10 @@ export default function Insights() {
       navigate("/login", { replace: true });
       return;
     }
-    Promise.all([getOverview(token), getSuperGuarantors(token), getCommunities(token)])
+    Promise.all([getOverview(token), getWeakLinks(token), getCommunities(token)])
       .then(([o, s, c]) => {
         setOv(o);
-        setSg(s);
+        setWl(s);
         setComm(c);
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : "Something went wrong."))
@@ -119,10 +119,11 @@ export default function Insights() {
           {/* Where the network concentrates risk */}
           <h2 className="mt-8 text-sm font-semibold text-ink">Where the network concentrates risk</h2>
           <div className="mt-2 grid gap-6 lg:grid-cols-2">
-            {/* Super-guarantors */}
+            {/* Weak links / single points of failure */}
             <section>
               <p className="mb-3 text-xs text-slate">
-                Members backing the most loans. Red = has defaulted themselves.
+                Single points of failure: members backing many loans. If one fails, all their
+                guarantees wobble at once. Exposure = the money riding on them.
               </p>
               <div className="overflow-hidden rounded-xl border border-line bg-white">
                 <table className="w-full text-sm">
@@ -130,11 +131,12 @@ export default function Insights() {
                     <tr>
                       <th className="px-4 py-2 font-medium">Member</th>
                       <th className="px-4 py-2 font-medium">Loans backed</th>
-                      <th className="px-4 py-2 font-medium">Of those, bad</th>
+                      <th className="px-4 py-2 font-medium">Exposure</th>
+                      <th className="px-4 py-2 font-medium">High risk</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-line">
-                    {sg.map((m) => (
+                    {wl.map((m) => (
                       <tr key={m.member_id}>
                         <td className="px-4 py-2">
                           <Link
@@ -150,7 +152,10 @@ export default function Insights() {
                           )}
                         </td>
                         <td className="px-4 py-2 font-mono text-ink">{m.loans_backed}</td>
-                        <td className="px-4 py-2 font-mono text-ink">{m.bad_loans_backed}</td>
+                        <td className="px-4 py-2 font-mono text-ink">{money(m.exposure)}</td>
+                        <td className="px-4 py-2 font-mono text-ink">
+                          {m.high_risk > 0 ? <span className="text-red-600">{m.high_risk}</span> : m.high_risk}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

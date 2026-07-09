@@ -54,6 +54,7 @@ export default function ApplicationDetail() {
   const isOfficer = user?.role === "loan_officer";
   const [app, setApp] = useState<ApplicationOut | null>(null);
   const [drivers, setDrivers] = useState<ShapContribution[]>([]);
+  const [brief, setBrief] = useState("");
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +64,8 @@ export default function ApplicationDetail() {
   const [wfSavings, setWfSavings] = useState("");
   const [wfSalary, setWfSalary] = useState("");
   const [wfGuar, setWfGuar] = useState("");
+  // per-guarantor attribute overrides: id -> { savings?, salary?, loans_backed? } as raw strings
+  const [wfOv, setWfOv] = useState<Record<string, { savings?: string; salary?: string; loans_backed?: string }>>({});
   const [wf, setWf] = useState<AssessResult | null>(null);
   const [wfBusy, setWfBusy] = useState(false);
 
@@ -82,8 +85,20 @@ export default function ApplicationDetail() {
         setWfSavings(String(a.savings ?? 0));
         setWfSalary(a.salary != null ? String(a.salary) : "");
         setWfGuar(a.guarantor_ids.join(", "));
-        // The model drivers (SHAP) are not stored on the application, so recompute
-        // them from the saved inputs to show what pushed the score up or down.
+        // Prefill the what-if editor with any guarantor overrides saved at assessment time.
+        if (a.guarantor_overrides) {
+          const seed: Record<string, { savings?: string; salary?: string; loans_backed?: string }> = {};
+          for (const [id, o] of Object.entries(a.guarantor_overrides)) {
+            seed[id] = {
+              savings: o.savings != null ? String(o.savings) : undefined,
+              salary: o.salary != null ? String(o.salary) : undefined,
+              loans_backed: o.loans_backed != null ? String(o.loans_backed) : undefined,
+            };
+          }
+          setWfOv(seed);
+        }
+        // The model drivers (SHAP) are not stored on the application, so recompute them from the
+        // saved inputs (including any overrides) so the drivers/brief match the stored score.
         assessRisk({
           borrower_id: a.borrower_id || undefined,
           amount: a.amount,
@@ -91,7 +106,8 @@ export default function ApplicationDetail() {
           salary: a.salary ?? null,
           interest_rate: a.interest_rate ?? 13,
           guarantor_ids: a.guarantor_ids,
-        }, token).then((res) => { setDrivers(res.shap); setRecommendations(res.recommendations); }).catch(() => {});
+          guarantor_overrides: a.guarantor_overrides ?? undefined,
+        }, token).then((res) => { setDrivers(res.shap); setRecommendations(res.recommendations); setBrief(res.brief ?? ""); }).catch(() => {});
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : "Something went wrong."))
       .finally(() => setLoading(false));
@@ -101,16 +117,32 @@ export default function ApplicationDetail() {
   const token = getToken() ?? "";
   const rwf = (n?: number | null) => (n == null ? "-" : "RWF " + Math.round(n).toLocaleString("en-US"));
 
+  function buildOverrides(ids: string[]) {
+    const out: Record<string, { savings?: number; salary?: number; loans_backed?: number }> = {};
+    for (const id of ids) {
+      const o = wfOv[id];
+      if (!o) continue;
+      const entry: { savings?: number; salary?: number; loans_backed?: number } = {};
+      if (o.savings?.trim()) entry.savings = Number(o.savings);
+      if (o.salary?.trim()) entry.salary = Number(o.salary);
+      if (o.loans_backed?.trim()) entry.loans_backed = Number(o.loans_backed);
+      if (Object.keys(entry).length) out[id] = entry;
+    }
+    return Object.keys(out).length ? out : undefined;
+  }
+
   async function runWhatIf() {
     setWfBusy(true); setError(null);
     try {
+      const ids = wfGuar.split(",").map((s) => s.trim()).filter(Boolean);
       const res = await assessRisk({
         borrower_id: app?.borrower_id || undefined,
         amount: Number(wfAmount),
         savings: Number(wfSavings) || 0,
         salary: wfSalary.trim() ? Number(wfSalary) : null,
         interest_rate: app?.interest_rate ?? 13,
-        guarantor_ids: wfGuar.split(",").map((s) => s.trim()).filter(Boolean),
+        guarantor_ids: ids,
+        guarantor_overrides: buildOverrides(ids),
       }, token);
       setWf(res);
     } catch (err) {
@@ -169,6 +201,13 @@ export default function ApplicationDetail() {
 
         {error && <div className="mt-4"><Alert tone="error">{error}</Alert></div>}
 
+        {brief && (
+          <div className="mt-4 rounded-lg border-l-4 border-brand bg-brand-50/60 px-4 py-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">Officer brief</h2>
+            <p className="mt-1 text-sm leading-relaxed text-ink">{brief}</p>
+          </div>
+        )}
+
         {/* Result + what-if side by side */}
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           {/* Assessment result */}
@@ -204,7 +243,8 @@ export default function ApplicationDetail() {
           <section className="rounded-xl border-2 border-accent/40 bg-accent-50/40 p-5">
             <h2 className="text-sm font-semibold text-ink">Simulate a change (what-if)</h2>
             <p className="mt-1 text-sm text-slate">
-              Try a different loan or guarantors and see how the risk moves, without starting over.
+              Try a different loan, different guarantors, or adjust a guarantor's own savings, salary,
+              or how many loans they back, and see how the risk moves, without starting over.
             </p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <label className="text-sm text-slate">Amount
@@ -220,6 +260,32 @@ export default function ApplicationDetail() {
                 <input className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 font-mono text-ink"
                        value={wfGuar} onChange={(e) => setWfGuar(e.target.value)} /></label>
             </div>
+
+            {/* Per-guarantor attribute overrides */}
+            {wfGuar.split(",").map((s) => s.trim()).filter(Boolean).length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate">Adjust guarantor details</p>
+                <p className="mb-2 text-xs text-slate">Leave blank to use their real values. Change a field to simulate a stronger or weaker guarantor.</p>
+                <div className="space-y-2">
+                  {wfGuar.split(",").map((s) => s.trim()).filter(Boolean).map((id) => {
+                    const o = wfOv[id] ?? {};
+                    const set = (k: "savings" | "salary" | "loans_backed", v: string) =>
+                      setWfOv((prev) => ({ ...prev, [id]: { ...prev[id], [k]: v } }));
+                    return (
+                      <div key={id} className="grid grid-cols-1 gap-2 sm:grid-cols-4 sm:items-center">
+                        <span className="font-mono text-xs text-brand">{id}</span>
+                        <input className="rounded-lg border border-line bg-white px-2 py-1.5 text-sm text-ink" type="number"
+                               placeholder="savings" value={o.savings ?? ""} onChange={(e) => set("savings", e.target.value)} />
+                        <input className="rounded-lg border border-line bg-white px-2 py-1.5 text-sm text-ink" type="number"
+                               placeholder="salary" value={o.salary ?? ""} onChange={(e) => set("salary", e.target.value)} />
+                        <input className="rounded-lg border border-line bg-white px-2 py-1.5 text-sm text-ink" type="number"
+                               placeholder="loans backed" value={o.loans_backed ?? ""} onChange={(e) => set("loans_backed", e.target.value)} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="mt-3 flex items-center gap-3">
               <Button variant="accent" onClick={runWhatIf} disabled={wfBusy}>
                 {wfBusy ? "Recalculating..." : "Recalculate"}
