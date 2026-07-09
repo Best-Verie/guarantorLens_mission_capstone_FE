@@ -68,6 +68,7 @@ export default function ApplicationDetail() {
   const [wfOv, setWfOv] = useState<Record<string, { savings?: string; salary?: string; loans_backed?: string }>>({});
   const [wf, setWf] = useState<AssessResult | null>(null);
   const [wfBusy, setWfBusy] = useState(false);
+  const [explainTab, setExplainTab] = useState<"drivers" | "plain" | "todo">("drivers");
 
   // workflow state
   const [escNote, setEscNote] = useState("");
@@ -263,23 +264,28 @@ export default function ApplicationDetail() {
 
             {/* Per-guarantor attribute overrides */}
             {wfGuar.split(",").map((s) => s.trim()).filter(Boolean).length > 0 && (
-              <div className="mt-3">
+              <div className="mt-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate">Adjust guarantor details</p>
-                <p className="mb-2 text-xs text-slate">Leave blank to use their real values. Change a field to simulate a stronger or weaker guarantor.</p>
+                <p className="mb-2 text-xs text-slate">Leave blank to use their real values.</p>
                 <div className="space-y-2">
                   {wfGuar.split(",").map((s) => s.trim()).filter(Boolean).map((id) => {
                     const o = wfOv[id] ?? {};
                     const set = (k: "savings" | "salary" | "loans_backed", v: string) =>
                       setWfOv((prev) => ({ ...prev, [id]: { ...prev[id], [k]: v } }));
                     return (
-                      <div key={id} className="grid grid-cols-1 gap-2 sm:grid-cols-4 sm:items-center">
-                        <span className="font-mono text-xs text-brand">{id}</span>
-                        <input className="rounded-lg border border-line bg-white px-2 py-1.5 text-sm text-ink" type="number"
-                               placeholder="savings" value={o.savings ?? ""} onChange={(e) => set("savings", e.target.value)} />
-                        <input className="rounded-lg border border-line bg-white px-2 py-1.5 text-sm text-ink" type="number"
-                               placeholder="salary" value={o.salary ?? ""} onChange={(e) => set("salary", e.target.value)} />
-                        <input className="rounded-lg border border-line bg-white px-2 py-1.5 text-sm text-ink" type="number"
-                               placeholder="loans backed" value={o.loans_backed ?? ""} onChange={(e) => set("loans_backed", e.target.value)} />
+                      <div key={id} className="rounded-lg border border-line bg-white p-2.5">
+                        <div className="mb-1.5 font-mono text-xs text-brand">{id}</div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {(["savings", "salary", "loans_backed"] as const).map((k) => (
+                            <label key={k} className="block">
+                              <span className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-slate">
+                                {k === "loans_backed" ? "Loans" : k}
+                              </span>
+                              <input className="w-full rounded border border-line bg-white px-2 py-1 text-sm text-ink"
+                                     type="number" value={o[k] ?? ""} onChange={(e) => set(k, e.target.value)} />
+                            </label>
+                          ))}
+                        </div>
                       </div>
                     );
                   })}
@@ -364,42 +370,70 @@ export default function ApplicationDetail() {
           </section>
         </div>
 
-        {/* Model drivers (SHAP), when the model exposes them */}
-        {drivers.length > 0 && (
-          <section className="mt-6 rounded-xl border border-line bg-white p-5">
-            <ScoreDrivers shap={drivers} />
-          </section>
-        )}
+        {/* Consolidated explanation: Drivers / In plain language / What to do */}
+        {(() => {
+          const available = [
+            drivers.length > 0 ? "drivers" : null,
+            app.reasons.length > 0 ? "plain" : null,
+            recommendations.length > 0 ? "todo" : null,
+          ].filter(Boolean) as ("drivers" | "plain" | "todo")[];
+          if (available.length === 0) return null;
+          const active = available.includes(explainTab) ? explainTab : available[0];
+          const TAB_LABEL = { drivers: "Drivers", plain: "In plain language", todo: "What to do" } as const;
+          return (
+            <section className="mt-6 rounded-xl border border-line bg-white p-5">
+              <div className="mb-4 inline-flex rounded-lg border border-line bg-slate-50 p-0.5">
+                {available.map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setExplainTab(t)}
+                    className={
+                      "rounded-md px-3 py-1.5 text-sm font-medium transition " +
+                      (active === t ? "bg-white text-ink shadow-sm" : "text-slate hover:text-ink")
+                    }
+                  >
+                    {TAB_LABEL[t]}
+                  </button>
+                ))}
+              </div>
 
-        {/* Why this score (full width) */}
-        {app.reasons.length > 0 && (
-          <section className="mt-6 rounded-xl border border-line bg-white p-5">
-            <h3 className="text-sm font-semibold text-ink">Why this score (in plain language)</h3>
-            <ul className="mt-1 space-y-1 text-sm">
-              {app.reasons.map((r) => (
-                <li key={r.label} className="text-ink">
-                  <span className="font-semibold">{r.direction === "up" ? "Raises" : "Lowers"} risk:</span>{" "}
-                  {r.label} ({r.kind}). {r.detail}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+              {active === "drivers" && <ScoreDrivers shap={drivers} />}
 
-        {/* Recommendations from the model (plain, actionable) */}
-        {recommendations.length > 0 && (
-          <section className="mt-6 rounded-xl border border-line bg-white p-5">
-            <h3 className="text-sm font-semibold text-ink">What you could do</h3>
-            <ul className="mt-2 space-y-1.5 text-sm text-ink">
-              {recommendations.map((r) => (
-                <li key={r} className="flex gap-2">
-                  <span className="text-accent-600">&rarr;</span><span>{r}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2 text-xs text-slate">Suggestions to help you decide, not a decision.</p>
-          </section>
-        )}
+              {active === "plain" && (
+                <ul className="space-y-2.5 text-sm">
+                  {app.reasons.map((r) => (
+                    <li key={r.label} className="flex gap-2.5">
+                      <span
+                        className={
+                          "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold " +
+                          (r.direction === "up" ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700")
+                        }
+                      >
+                        {r.direction === "up" ? "↑" : "↓"}
+                      </span>
+                      <span className="text-ink">
+                        <span className="font-semibold">{r.label}</span> ({r.kind}). {r.detail}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {active === "todo" && (
+                <>
+                  <ul className="space-y-1.5 text-sm text-ink">
+                    {recommendations.map((r) => (
+                      <li key={r} className="flex gap-2">
+                        <span className="text-accent-600">&rarr;</span><span>{r}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-xs text-slate">Suggestions to help you decide, not a decision.</p>
+                </>
+              )}
+            </section>
+          );
+        })()}
 
         {/* Escalation */}
         <section className="mt-6 rounded-xl border border-line bg-white p-5">
