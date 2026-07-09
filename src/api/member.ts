@@ -49,7 +49,7 @@ export interface MemberExamples {
   member_ids: string[];
   sample: {
     borrower_id: string; guarantor_ids: string[]; amount: number;
-    savings?: number | null; salary?: number | null;
+    savings?: number | null; salary?: number | null; interest_rate?: number | null;
   } | null;
 }
 

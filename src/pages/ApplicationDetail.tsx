@@ -178,7 +178,12 @@ export default function ApplicationDetail() {
                 <ScoreGauge score={app.risk_score} band={app.band} />
               )}
               <div>
-                <h2 className="text-lg font-bold text-ink">{app.band} risk · {app.risk_score}/100</h2>
+                <h2 className="text-lg font-bold text-ink">{app.band} risk</h2>
+                {app.reasons.some((r) => r.label.startsWith("Risk level raised")) && (
+                  <p className="mt-0.5 text-xs font-medium text-red-600">
+                    Raised to {app.band} by guarantor flags (model score {app.risk_score}/100)
+                  </p>
+                )}
                 <p className="mt-1 text-sm text-slate">
                   {app.guarantor_ids.length} guarantor(s) · loan {rwf(app.amount)} · savings {rwf(app.savings)}
                 </p>

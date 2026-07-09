@@ -87,9 +87,13 @@ export default function AssessResult() {
         {/* Score */}
         <section className="flex flex-col items-center rounded-xl border border-line bg-white p-6">
           <ScoreGauge score={result.risk_score} band={result.band} />
-          <p className="mt-3 text-center text-sm text-slate">
-            Risk score out of 100
-          </p>
+          {result.reasons.some((r) => r.label.startsWith("Risk level raised")) ? (
+            <p className="mt-3 text-center text-xs font-medium text-red-600">
+              Raised to {result.band} by guarantor flags (model score {result.risk_score}/100)
+            </p>
+          ) : (
+            <p className="mt-3 text-center text-sm text-slate">Risk level from the model</p>
+          )}
           <span className="mt-1 text-xs text-slate">
             Source: {result.source === "model" ? "model" : "rule-based fallback"}
           </span>

@@ -38,6 +38,7 @@ export default function AssessRisk() {
         setAmount(String(e.sample.amount || ""));
         if (e.sample.savings != null) setSavings(String(Math.round(e.sample.savings)));
         if (e.sample.salary != null) setSalary(String(Math.round(e.sample.salary)));
+        if (e.sample.interest_rate != null) setInterestRate(String(e.sample.interest_rate));
       }
     }).catch(() => {});
   }, []);
