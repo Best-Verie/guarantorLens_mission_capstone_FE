@@ -45,6 +45,18 @@ export interface MemberDetail {
   network: { nodes: NetNode[]; edges: NetEdge[] };
 }
 
+export interface MemberExamples {
+  member_ids: string[];
+  sample: {
+    borrower_id: string; guarantor_ids: string[]; amount: number;
+    savings?: number | null; salary?: number | null;
+  } | null;
+}
+
+export function getExamples(token: string): Promise<MemberExamples> {
+  return request<MemberExamples>("/members/examples", { token });
+}
+
 export function getMember(id: string, token: string): Promise<MemberDetail> {
   return request<MemberDetail>(`/member/${encodeURIComponent(id)}`, { token });
 }

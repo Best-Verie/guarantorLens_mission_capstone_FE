@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "../components/app/AppShell";
@@ -8,6 +8,7 @@ import { Alert } from "../components/ui/Alert";
 import { UserIcon } from "../components/icons";
 import type { AssessInput } from "../api/risk";
 import { createApplication } from "../api/applications";
+import { getExamples } from "../api/member";
 import { ApiError } from "../api/http";
 import { getToken } from "../lib/session";
 
@@ -16,12 +17,29 @@ export default function AssessRisk() {
 
   // Borrower ID is optional: enter an existing member to pull their history,
   // or leave it blank for a brand-new applicant.
-  const [borrowerId, setBorrowerId] = useState("Gasabo-335");
-  const [amount, setAmount] = useState("1323000");
-  const [savings, setSavings] = useState("32036");
-  const [salary, setSalary] = useState("91617");
-  const [guarantors, setGuarantors] = useState<string[]>(["Gasabo-189", "Gasabo-664", "Gasabo-366"]);
+  const [borrowerId, setBorrowerId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [savings, setSavings] = useState("");
+  const [salary, setSalary] = useState("");
+  const [guarantors, setGuarantors] = useState<string[]>([]);
   const [guarantorInput, setGuarantorInput] = useState("");
+  const [exampleId, setExampleId] = useState("");
+
+  // Prefill a real, ready-to-run example from the deployed data (works with any dataset).
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+    getExamples(token).then((e) => {
+      if (e.member_ids[0]) setExampleId(e.member_ids[0]);
+      if (e.sample) {
+        setBorrowerId(e.sample.borrower_id);
+        setGuarantors(e.sample.guarantor_ids);
+        setAmount(String(e.sample.amount || ""));
+        if (e.sample.savings != null) setSavings(String(Math.round(e.sample.savings)));
+        if (e.sample.salary != null) setSalary(String(Math.round(e.sample.salary)));
+      }
+    }).catch(() => {});
+  }, []);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -90,7 +108,7 @@ export default function AssessRisk() {
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Borrower member ID"
-                placeholder="e.g. Gasabo-335"
+                placeholder={exampleId ? `e.g. ${exampleId}` : "Member ID"}
                 icon={<UserIcon />}
                 value={borrowerId}
                 onChange={(e) => setBorrowerId(e.target.value)}
@@ -128,8 +146,8 @@ export default function AssessRisk() {
               </span>
             </div>
             <p className="mb-3 text-sm text-slate">
-              The members who back this loan. Use IDs that exist in the network,
-              e.g. Gasabo-189.
+              The members who back this loan. Use member IDs that exist in the network
+              {exampleId ? `, e.g. ${exampleId}` : ""}.
             </p>
 
             <div className="flex gap-2">

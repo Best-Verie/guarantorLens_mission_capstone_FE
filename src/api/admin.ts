@@ -54,6 +54,10 @@ export function getActivity(token: string): Promise<ActivityStats> {
   return request<ActivityStats>("/admin/activity", { token });
 }
 
+export function clearApplications(token: string): Promise<{ message: string }> {
+  return request<{ message: string }>("/admin/applications", { method: "DELETE", token });
+}
+
 export function uploadModel(
   files: { model: File; members?: File | null; loans?: File | null },
   token: string

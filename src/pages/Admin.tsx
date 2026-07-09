@@ -4,7 +4,7 @@ import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
 import { Alert } from "../components/ui/Alert";
 import {
-  listUsers, setUserRole, deleteUser, getModelCard, getActivity, uploadModel,
+  listUsers, setUserRole, deleteUser, getModelCard, getActivity, uploadModel, clearApplications,
 } from "../api/admin";
 import type { AdminUser, ModelCard, ActivityStats } from "../api/admin";
 import type { Role } from "../api/auth";
@@ -188,6 +188,17 @@ function ModelTab({ token }: { token: string }) {
     } finally { setBusy(false); }
   }
 
+  async function clearApps() {
+    if (!window.confirm("Delete ALL saved applications and their recommendations? This cannot be undone.")) return;
+    setBusy(true); setError(null); setNote(null);
+    try {
+      const res = await clearApplications(token);
+      setNote(res.message);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Could not clear applications.");
+    } finally { setBusy(false); }
+  }
+
   if (error && !card) return <Alert tone="error">{error}</Alert>;
   if (!card) return <p className="text-sm text-slate">Loading...</p>;
 
@@ -274,6 +285,19 @@ function ModelTab({ token }: { token: string }) {
           This updates the running server immediately. On a free-tier host the filesystem
           resets on redeploy, so for a permanent change also commit the artifacts to the repo.
         </p>
+      </section>
+
+      {/* Maintenance: clear stale applications after a dataset swap */}
+      <section className="rounded-xl border border-red-200 bg-red-50/40 p-5 lg:col-span-2">
+        <h2 className="text-base font-semibold text-ink">Clear saved applications</h2>
+        <p className="mt-1 text-sm text-slate">
+          Applications live in the database, not in the model files. After you swap in a new
+          dataset, the old applications still point at members that no longer exist. Clear them
+          to start fresh. This does not touch users or the model.
+        </p>
+        <Button variant="secondary" className="mt-3 border-red-300 text-red-700" disabled={busy} onClick={clearApps}>
+          Clear all applications
+        </Button>
       </section>
     </div>
   );

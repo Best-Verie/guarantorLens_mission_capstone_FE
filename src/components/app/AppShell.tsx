@@ -50,7 +50,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Logo theme="light" showSub={false} />
         </div>
 
-        <nav className="flex flex-1 flex-col gap-0.5 px-3">
+        <nav className="flex flex-1 flex-col gap-1 px-3 pt-2">
+          <div className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            Menu
+          </div>
           {nav.map((n) => {
             const active = pathname === n.to || pathname.startsWith(n.to + "/");
             return (
@@ -58,7 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={n.to}
                 to={n.to}
                 className={cn(
-                  "rounded-lg px-3 py-2 text-sm font-medium",
+                  "rounded-lg px-3 py-2.5 text-sm font-medium",
                   active ? "bg-brand-50 text-brand" : "text-slate hover:bg-slate-100 hover:text-ink"
                 )}
               >
