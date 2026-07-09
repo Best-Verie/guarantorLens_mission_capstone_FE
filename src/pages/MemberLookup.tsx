@@ -9,13 +9,6 @@ import { getToken } from "../lib/session";
 const PAGE_SIZE = 25;
 const rwf = (n?: number | null) => (n == null ? "-" : "RWF " + Math.round(n).toLocaleString("en-US"));
 
-const SORTS: { key: string; label: string }[] = [
-  { key: "loans_backed", label: "Loans backed" },
-  { key: "savings", label: "Savings" },
-  { key: "salary", label: "Salary" },
-  { key: "member_id", label: "Member ID" },
-];
-
 export default function MemberLookup() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
