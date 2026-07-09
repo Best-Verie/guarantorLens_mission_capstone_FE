@@ -20,6 +20,7 @@ export interface ShapContribution {
   value: number;
   direction: "up" | "down";
   kind?: "individual" | "network";
+  plain?: string;
 }
 
 export interface AssessResult {
@@ -67,6 +68,7 @@ export interface GuarantorSuggestion {
   delta: number;
   add_savings?: number | null;
   add_loans_backed: number;
+  add_branch?: string | null;
   why: string;
 }
 
@@ -74,6 +76,7 @@ export interface SuggestResult {
   current: { score: number; band: string };
   suggestions: GuarantorSuggestion[];
   weakest_current?: string | null;
+  branch?: string | null;
   message: string;
 }
 

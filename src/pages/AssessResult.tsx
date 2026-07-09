@@ -179,7 +179,8 @@ export default function AssessResult() {
           <p className="mt-1 text-sm text-slate">
             The current guarantee scores <span className="font-semibold">{suggest.current.band} {suggest.current.score}/100</span>.
             {suggest.weakest_current && <> The weakest current backer is <span className="font-mono">{suggest.weakest_current}</span>.</>}
-            {" "}A single change would lower the risk:
+            {" "}A single change would lower the risk
+            {suggest.branch && <> (only guarantors from the borrower's branch, <span className="font-medium">{suggest.branch}</span>, are suggested)</>}:
           </p>
           <ul className="mt-3 space-y-2">
             {suggest.suggestions.map((s, i) => (

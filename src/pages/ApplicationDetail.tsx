@@ -9,8 +9,8 @@ import {
   getApplication, escalateApplication, addRecommendation,
 } from "../api/applications";
 import type { ApplicationOut } from "../api/applications";
-import { assessRisk } from "../api/risk";
-import type { AssessResult, ShapContribution } from "../api/risk";
+import { assessRisk, suggestGuarantors } from "../api/risk";
+import type { AssessResult, ShapContribution, SuggestResult } from "../api/risk";
 import { ApiError } from "../api/http";
 import { getToken, getUser } from "../lib/session";
 
@@ -68,7 +68,8 @@ export default function ApplicationDetail() {
   const [wfOv, setWfOv] = useState<Record<string, { savings?: string; salary?: string; loans_backed?: string }>>({});
   const [wf, setWf] = useState<AssessResult | null>(null);
   const [wfBusy, setWfBusy] = useState(false);
-  const [explainTab, setExplainTab] = useState<"drivers" | "plain" | "todo">("drivers");
+  const [explainTab, setExplainTab] = useState<"drivers" | "plain" | "todo">("plain");
+  const [suggest, setSuggest] = useState<SuggestResult | null>(null);
 
   // workflow state
   const [escNote, setEscNote] = useState("");
@@ -109,6 +110,19 @@ export default function ApplicationDetail() {
           guarantor_ids: a.guarantor_ids,
           guarantor_overrides: a.guarantor_overrides ?? undefined,
         }, token).then((res) => { setDrivers(res.shap); setRecommendations(res.recommendations); setBrief(res.brief ?? ""); }).catch(() => {});
+        // For a Medium/High application, fetch same-branch guarantor suggestions.
+        setSuggest(null);
+        if (a.band && a.band !== "Low") {
+          suggestGuarantors({
+            borrower_id: a.borrower_id || undefined,
+            amount: a.amount,
+            savings: a.savings ?? 0,
+            salary: a.salary ?? null,
+            interest_rate: a.interest_rate ?? 13,
+            guarantor_ids: a.guarantor_ids,
+            guarantor_overrides: a.guarantor_overrides ?? undefined,
+          }, token).then(setSuggest).catch(() => {});
+        }
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : "Something went wrong."))
       .finally(() => setLoading(false));
@@ -372,9 +386,10 @@ export default function ApplicationDetail() {
 
         {/* Consolidated explanation: Drivers / In plain language / What to do */}
         {(() => {
+          // Plain language first (default), then the driver bars, then recommendations.
           const available = [
+            drivers.length > 0 ? "plain" : null,
             drivers.length > 0 ? "drivers" : null,
-            app.reasons.length > 0 ? "plain" : null,
             recommendations.length > 0 ? "todo" : null,
           ].filter(Boolean) as ("drivers" | "plain" | "todo")[];
           if (available.length === 0) return null;
@@ -401,18 +416,22 @@ export default function ApplicationDetail() {
 
               {active === "plain" && (
                 <ul className="space-y-2.5 text-sm">
-                  {app.reasons.map((r) => (
-                    <li key={r.label} className="flex gap-2.5">
+                  {drivers.map((d) => (
+                    <li key={d.feature} className="flex gap-2.5">
                       <span
                         className={
                           "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold " +
-                          (r.direction === "up" ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700")
+                          (d.direction === "up" ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700")
                         }
                       >
-                        {r.direction === "up" ? "↑" : "↓"}
+                        {d.direction === "up" ? "↑" : "↓"}
                       </span>
                       <span className="text-ink">
-                        <span className="font-semibold">{r.label}</span> ({r.kind}). {r.detail}
+                        <span className="font-semibold">{d.label}</span>
+                        {d.kind === "network" && (
+                          <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide text-accent-600">Network</span>
+                        )}
+                        {" — "}{d.plain ?? (d.direction === "up" ? "raises the risk." : "lowers the risk.")}
                       </span>
                     </li>
                   ))}
@@ -434,6 +453,39 @@ export default function ApplicationDetail() {
             </section>
           );
         })()}
+
+        {/* Guarantor fix-it advisor (Medium/High applications) */}
+        {suggest && suggest.suggestions.length > 0 && (
+          <section className="mt-6 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 p-5">
+            <h2 className="text-sm font-semibold text-ink">How to make this loan more bankable</h2>
+            <p className="mt-1 text-sm text-slate">
+              A single guarantor change would lower the risk
+              {suggest.branch && <> (only guarantors from the borrower's branch, <span className="font-medium">{suggest.branch}</span>, are suggested)</>}:
+            </p>
+            <ul className="mt-3 space-y-2">
+              {suggest.suggestions.map((s, i) => (
+                <li key={i} className="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm">
+                  <span className="text-emerald-700">&rarr;</span>
+                  {s.action === "swap" ? (
+                    <span>Swap out <span className="font-mono text-red-600">{s.remove}</span> for <span className="font-mono text-brand">{s.add}</span></span>
+                  ) : (
+                    <span>Add <span className="font-mono text-brand">{s.add}</span> as a guarantor</span>
+                  )}
+                  <span className="text-xs text-slate">
+                    ({rwf(s.add_savings)} savings, backs {s.add_loans_backed}{s.add_branch ? `, ${s.add_branch}` : ""})
+                  </span>
+                  <span className="ml-auto flex items-center gap-2">
+                    <span className={"rounded px-2 py-0.5 text-xs font-medium " + (bandClass[s.new_band] ?? "")}>
+                      {s.new_band} {s.new_score}/100
+                    </span>
+                    <span className="text-xs font-medium text-emerald-700">{s.delta}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-slate">Real same-branch members, re-scored by the model. A suggestion, not a decision.</p>
+          </section>
+        )}
 
         {/* Escalation */}
         <section className="mt-6 rounded-xl border border-line bg-white p-5">
