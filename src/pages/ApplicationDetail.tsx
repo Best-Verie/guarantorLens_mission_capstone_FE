@@ -89,6 +89,7 @@ export default function ApplicationDetail() {
           amount: a.amount,
           savings: a.savings ?? 0,
           salary: a.salary ?? null,
+          interest_rate: a.interest_rate ?? 13,
           guarantor_ids: a.guarantor_ids,
         }, token).then((res) => { setDrivers(res.shap); setRecommendations(res.recommendations); }).catch(() => {});
       })
@@ -108,6 +109,7 @@ export default function ApplicationDetail() {
         amount: Number(wfAmount),
         savings: Number(wfSavings) || 0,
         salary: wfSalary.trim() ? Number(wfSalary) : null,
+        interest_rate: app?.interest_rate ?? 13,
         guarantor_ids: wfGuar.split(",").map((s) => s.trim()).filter(Boolean),
       }, token);
       setWf(res);

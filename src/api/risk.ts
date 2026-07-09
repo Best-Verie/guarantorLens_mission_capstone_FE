@@ -40,6 +40,7 @@ export interface AssessInput {
   amount: number;
   savings: number;
   salary?: number | null;
+  interest_rate?: number | null;
   disbursement_date?: string;
   guarantor_ids: string[];
 }

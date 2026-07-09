@@ -20,6 +20,7 @@ export interface ApplicationOut {
   amount: number;
   savings?: number | null;
   salary?: number | null;
+  interest_rate?: number | null;
   guarantor_ids: string[];
   risk_score?: number | null;
   band?: "Low" | "Medium" | "High" | null;
@@ -55,6 +56,7 @@ export interface ApplicationCreate {
   amount: number;
   savings: number;
   salary?: number | null;
+  interest_rate?: number | null;
   guarantor_ids: string[];
   borrower_id?: string;
   borrower_name?: string;

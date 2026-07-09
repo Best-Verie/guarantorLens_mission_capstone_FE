@@ -21,6 +21,7 @@ export default function AssessRisk() {
   const [amount, setAmount] = useState("");
   const [savings, setSavings] = useState("");
   const [salary, setSalary] = useState("");
+  const [interestRate, setInterestRate] = useState("13");
   const [guarantors, setGuarantors] = useState<string[]>([]);
   const [guarantorInput, setGuarantorInput] = useState("");
   const [exampleId, setExampleId] = useState("");
@@ -73,6 +74,7 @@ export default function AssessRisk() {
       amount: Number(amount),
       savings: Number(savings) || 0,
       salary: salary.trim() ? Number(salary) : null,
+      interest_rate: interestRate.trim() ? Number(interestRate) : null,
       guarantor_ids: guarantors,
     };
     if (!input.amount || input.amount <= 0) {
@@ -134,6 +136,13 @@ export default function AssessRisk() {
                 value={salary}
                 onChange={(e) => setSalary(e.target.value)}
                 hint="Leave blank if not on file."
+              />
+              <TextField
+                label="Interest rate (%)"
+                type="number"
+                value={interestRate}
+                onChange={(e) => setInterestRate(e.target.value)}
+                hint="The loan's rate, usually 13 or 14. A strong risk signal."
               />
             </div>
           </section>

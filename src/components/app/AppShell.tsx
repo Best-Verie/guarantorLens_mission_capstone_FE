@@ -70,10 +70,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
+
+        {/* Sign out pinned to the bottom of the sidebar */}
+        <div className="border-t border-line px-3 py-4">
+          <Button variant="secondary" onClick={signOut} className="w-full">
+            Sign out
+          </Button>
+        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top bar: signed-in identity + sign out */}
+        {/* Top bar: signed-in identity */}
         <header className="sticky top-0 z-10 flex h-16 items-center border-b border-line bg-white px-8">
           <div className="ml-auto flex items-center gap-4">
             {user && (
@@ -87,9 +94,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {user.full_name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}
               </span>
             )}
-            <Button variant="secondary" onClick={signOut}>
-              Sign out
-            </Button>
           </div>
         </header>
 

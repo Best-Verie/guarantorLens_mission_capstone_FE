@@ -40,24 +40,39 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  let res: Response;
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 20000); // never hang forever
-  try {
-    res = await fetch(`${API_URL}${path}`, {
-      method,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: ctrl.signal,
-    });
-  } catch (e) {
-    const msg =
+  // One fetch attempt with a timeout (free hosting can be slow to wake).
+  const attempt = async () => {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 40000);
+    try {
+      return await fetch(`${API_URL}${path}`, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: ctrl.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
+  const netError = (e: unknown) =>
+    new ApiError(0,
       e instanceof DOMException && e.name === "AbortError"
-        ? "The server took too long to respond. It may be starting up; try again."
-        : "Could not reach the server. Check that the backend is running and VITE_API_URL is correct.";
-    throw new ApiError(0, msg);
-  } finally {
-    clearTimeout(timer);
+        ? "The server took too long to respond. It may be waking up; try again."
+        : "Could not reach the server. It may be waking up (free hosting sleeps when idle); try again in a moment.");
+
+  let res: Response;
+  try {
+    res = await attempt();
+  } catch (e) {
+    // Render free tier sleeps; the first request after idle often fails. Retry GETs once.
+    if (method === "GET") {
+      await new Promise((r) => setTimeout(r, 2500));
+      try { res = await attempt(); } catch (e2) { throw netError(e2); }
+    } else {
+      throw netError(e);
+    }
   }
 
   const isJson = res.headers.get("content-type")?.includes("application/json");
