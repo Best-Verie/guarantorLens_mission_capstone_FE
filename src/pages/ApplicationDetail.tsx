@@ -23,6 +23,29 @@ const STATUS_LABEL: Record<string, string> = {
   assessed: "New", escalated: "Escalated", recommended: "Reviewed", closed: "Closed",
 };
 
+function shapChangeDrivers(before: ShapContribution[], after: ShapContribution[]) {
+  const beforeMap = new Map(before.map((s) => [s.feature, s]));
+  return after
+    .map((next) => {
+      const prev = beforeMap.get(next.feature);
+      const previous = prev?.value ?? 0;
+      const delta = next.value - previous;
+      return { ...next, previous, delta };
+    })
+    .filter((s) => Math.abs(s.delta) > 0.0001)
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+    .slice(0, 5);
+}
+
+function listDiff(before: string[], after: string[]) {
+  const b = new Set(before);
+  const a = new Set(after);
+  return {
+    added: after.filter((x) => !b.has(x)),
+    removed: before.filter((x) => !a.has(x)),
+  };
+}
+
 export default function ApplicationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -31,6 +54,7 @@ export default function ApplicationDetail() {
   const isOfficer = user?.role === "loan_officer";
   const [app, setApp] = useState<ApplicationOut | null>(null);
   const [drivers, setDrivers] = useState<ShapContribution[]>([]);
+  const [recommendations, setRecommendations] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -66,7 +90,7 @@ export default function ApplicationDetail() {
           savings: a.savings ?? 0,
           salary: a.salary ?? null,
           guarantor_ids: a.guarantor_ids,
-        }, token).then((res) => setDrivers(res.shap)).catch(() => {});
+        }, token).then((res) => { setDrivers(res.shap); setRecommendations(res.recommendations); }).catch(() => {});
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : "Something went wrong."))
       .finally(() => setLoading(false));
@@ -113,6 +137,10 @@ export default function ApplicationDetail() {
   if (!app) return null;
 
   const delta = wf && app.risk_score != null ? wf.risk_score - app.risk_score : null;
+  const whatIfDrivers = wf ? shapChangeDrivers(drivers, wf.shap) : [];
+  const whatIfGuarantors = wf ? listDiff(app.guarantor_ids, wfGuar.split(",").map((s) => s.trim()).filter(Boolean)) : { added: [], removed: [] };
+  const newFlags = wf ? wf.flags.filter((f) => !app.flags.includes(f)) : [];
+  const clearedFlags = wf ? app.flags.filter((f) => !wf.flags.includes(f)) : [];
 
   return (
     <AppShell>
@@ -203,6 +231,63 @@ export default function ApplicationDetail() {
                 </div>
               )}
             </div>
+            {wf && (
+              <div className="mt-4 rounded-lg border border-accent/30 bg-white p-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate">What changed the score</h3>
+                <ul className="mt-2 space-y-1 text-sm text-ink">
+                  {Number(wfAmount) !== app.amount && (
+                    <li>
+                      Amount changed from <span className="font-medium">{rwf(app.amount)}</span> to{" "}
+                      <span className="font-medium">{rwf(Number(wfAmount))}</span>.
+                    </li>
+                  )}
+                  {whatIfGuarantors.added.length > 0 && (
+                    <li>
+                      Added guarantor(s): <span className="font-mono">{whatIfGuarantors.added.join(", ")}</span>.
+                    </li>
+                  )}
+                  {whatIfGuarantors.removed.length > 0 && (
+                    <li>
+                      Removed guarantor(s): <span className="font-mono">{whatIfGuarantors.removed.join(", ")}</span>.
+                    </li>
+                  )}
+                  {newFlags.slice(0, 3).map((f) => (
+                    <li key={`new-${f}`} className="text-red-700">New warning: {f}</li>
+                  ))}
+                  {clearedFlags.slice(0, 3).map((f) => (
+                    <li key={`cleared-${f}`} className="text-emerald-700">Cleared warning: {f}</li>
+                  ))}
+                  {whatIfDrivers.map((d) => {
+                    const up = d.delta > 0;
+                    const network = d.kind === "network" || d.feature.startsWith("g_") || d.feature === "n_guarantors";
+                    return (
+                      <li key={d.feature}>
+                        <span className={up ? "text-red-700" : "text-emerald-700"}>
+                          {up ? "More risk from " : "Less risk from "}
+                        </span>
+                        {d.label}
+                        {network && <span className="ml-1 text-[10px] font-semibold uppercase text-accent-600">Network</span>}
+                      </li>
+                    );
+                  })}
+                  {whatIfDrivers.length === 0 && newFlags.length === 0 && clearedFlags.length === 0 &&
+                    whatIfGuarantors.added.length === 0 && whatIfGuarantors.removed.length === 0 &&
+                    Number(wfAmount) === app.amount && (
+                      <li className="text-slate">No major model driver changed; the score moved only slightly.</li>
+                    )}
+                </ul>
+                {wf.recommendations.length > 0 && (
+                  <>
+                    <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate">Suggestions</h3>
+                    <ul className="mt-1 space-y-1 text-sm text-ink">
+                      {wf.recommendations.slice(0, 3).map((r) => (
+                        <li key={r} className="flex gap-2"><span className="text-accent-600">&rarr;</span><span>{r}</span></li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
+            )}
           </section>
         </div>
 
@@ -225,6 +310,21 @@ export default function ApplicationDetail() {
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {/* Recommendations from the model (plain, actionable) */}
+        {recommendations.length > 0 && (
+          <section className="mt-6 rounded-xl border border-line bg-white p-5">
+            <h3 className="text-sm font-semibold text-ink">What you could do</h3>
+            <ul className="mt-2 space-y-1.5 text-sm text-ink">
+              {recommendations.map((r) => (
+                <li key={r} className="flex gap-2">
+                  <span className="text-accent-600">&rarr;</span><span>{r}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-slate">Suggestions to help you decide, not a decision.</p>
           </section>
         )}
 

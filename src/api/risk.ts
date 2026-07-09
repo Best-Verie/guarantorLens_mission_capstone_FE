@@ -28,6 +28,7 @@ export interface AssessResult {
   probability: number;
   source: "model" | "heuristic";
   reasons: Reason[];
+  recommendations: string[];      // plain, actionable suggestions
   shap: ShapContribution[];
   flags: string[];
   network: NetworkInfo;

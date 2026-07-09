@@ -127,6 +127,21 @@ export default function AssessResult() {
               <li className="py-2.5 text-sm text-slate">No strong factors either way.</li>
             )}
           </ul>
+
+          {result.recommendations.length > 0 && (
+            <>
+              <h2 className="mt-6 text-sm font-semibold text-ink">What you could do</h2>
+              <ul className="mt-2 space-y-1.5 text-sm text-ink">
+                {result.recommendations.map((r) => (
+                  <li key={r} className="flex gap-2">
+                    <span className="text-accent-600">&rarr;</span>
+                    <span>{r}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs text-slate">Suggestions to help you decide, not a decision.</p>
+            </>
+          )}
         </section>
       </div>
 
