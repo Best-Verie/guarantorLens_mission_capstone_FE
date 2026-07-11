@@ -12,6 +12,7 @@ import MemberLookup from "./pages/MemberLookup";
 import Insights from "./pages/Insights";
 import Applications from "./pages/Applications";
 import ApplicationDetail from "./pages/ApplicationDetail";
+import ApplicationReport from "./pages/ApplicationReport";
 import Monitoring from "./pages/Monitoring";
 import Admin from "./pages/Admin";
 import { RequireAuth } from "./components/auth/RequireAuth";
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/assess" element={<RequireAuth><AssessRisk /></RequireAuth>} />
         <Route path="/applications" element={<RequireAuth><Applications /></RequireAuth>} />
         <Route path="/applications/:id" element={<RequireAuth><ApplicationDetail /></RequireAuth>} />
+        <Route path="/applications/:id/report" element={<RequireAuth><ApplicationReport /></RequireAuth>} />
         <Route path="/assess/result" element={<RequireAuth><AssessResult /></RequireAuth>} />
         <Route path="/assess/report" element={<RequireAuth><AssessReport /></RequireAuth>} />
         <Route path="/members" element={<RequireAuth><MemberLookup /></RequireAuth>} />

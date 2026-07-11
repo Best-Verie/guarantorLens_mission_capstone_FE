@@ -96,6 +96,7 @@ export default function Applications() {
                 <th className="px-4 py-2 font-medium">Risk</th>
                 <th className="px-4 py-2 font-medium">Status</th>
                 {isManager && <th className="px-4 py-2 font-medium">Officer</th>}
+                <th className="px-4 py-2 font-medium">PDF</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -125,11 +126,19 @@ export default function Applications() {
                     </span>
                   </td>
                   {isManager && <td className="px-4 py-2 text-slate">{a.created_by_name}</td>}
+                  <td className="px-4 py-2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/applications/${a.id}/report`); }}
+                      className="rounded border border-line px-2 py-0.5 text-xs font-medium text-brand hover:bg-brand-50"
+                    >
+                      PDF
+                    </button>
+                  </td>
                 </tr>
               ))}
               {items.length === 0 && (
                 <tr>
-                  <td colSpan={isManager ? 7 : 6} className="px-4 py-6 text-center text-sm text-slate">
+                  <td colSpan={isManager ? 8 : 7} className="px-4 py-6 text-center text-sm text-slate">
                     No applications yet. Start with a new assessment.
                   </td>
                 </tr>

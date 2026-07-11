@@ -92,7 +92,7 @@ export default function AssessResult() {
             variant="secondary"
             onClick={() => navigate("/assess/report", { state: { result, input } })}
           >
-            Download report
+            Download PDF
           </Button>
           <Button variant="secondary" onClick={() => navigate("/assess")}>
             New assessment

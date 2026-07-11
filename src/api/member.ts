@@ -12,6 +12,7 @@ export interface LoanRef {
 export interface BackedLoan {
   loan_key: string;
   borrower: string;
+  amount: number;
   outcome: string;
 }
 

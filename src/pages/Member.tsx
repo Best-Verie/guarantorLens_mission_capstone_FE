@@ -305,48 +305,56 @@ export default function Member() {
             )}
           </section>
 
-          {/* Backers + guarantees given */}
-          <div className="mb-6 grid gap-6 lg:grid-cols-2">
-            <section>
-              <h2 className="mb-2 text-sm font-semibold text-ink">
-                Backed by ({member.backers.length})
-              </h2>
-              {member.backers.length === 0 ? (
-                <p className="text-sm text-slate">No one guarantees this member's loans.</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {member.backers.map((b) => (
-                    <MemberChip key={b} id={b} uid={member.uids[b]} />
-                  ))}
-                </div>
-              )}
-            </section>
+          {/* Backed by (who guarantees this member's loans) */}
+          <section className="mb-6">
+            <h2 className="mb-2 text-sm font-semibold text-ink">
+              Backed by ({member.backers.length})
+            </h2>
+            {member.backers.length === 0 ? (
+              <p className="text-sm text-slate">No one guarantees this member's loans.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {member.backers.map((b) => (
+                  <MemberChip key={b} id={b} uid={member.uids[b]} />
+                ))}
+              </div>
+            )}
+          </section>
 
-            <section>
-              <h2 className="mb-2 text-sm font-semibold text-ink">
-                Guarantees given ({member.guarantees_given.length})
-              </h2>
-              {member.guarantees_given.length === 0 ? (
-                <p className="text-sm text-slate">This member does not guarantee anyone.</p>
-              ) : (
-                <ul className="flex flex-col gap-1.5 text-sm">
-                  {member.guarantees_given.slice(0, 12).map((g) => (
-                    <li key={g.loan_key} className="flex items-center gap-2">
-                      <MemberChip id={g.borrower} uid={member.uids[g.borrower]} />
-                      <span className={cn("rounded px-2 py-0.5 text-xs font-medium", outcomeClass(g.outcome))}>
-                        {g.outcome}
-                      </span>
-                    </li>
-                  ))}
-                  {member.guarantees_given.length > 12 && (
-                    <li className="text-xs text-slate">
-                      + {member.guarantees_given.length - 12} more
-                    </li>
-                  )}
-                </ul>
-              )}
-            </section>
-          </div>
+          {/* Guarantees given (loans this member backs) - as a table */}
+          <section className="mb-6">
+            <h2 className="mb-2 text-sm font-semibold text-ink">
+              Guarantees given ({member.guarantees_given.length})
+            </h2>
+            {member.guarantees_given.length === 0 ? (
+              <p className="text-sm text-slate">This member does not guarantee anyone.</p>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-line bg-white">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 text-left text-xs text-slate">
+                    <tr>
+                      <th className="px-4 py-2 font-medium">Borrower</th>
+                      <th className="px-4 py-2 font-medium">Amount</th>
+                      <th className="px-4 py-2 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {member.guarantees_given.map((g) => (
+                      <tr key={g.loan_key}>
+                        <td className="px-4 py-2"><MemberChip id={g.borrower} uid={member.uids[g.borrower]} /></td>
+                        <td className="px-4 py-2 font-mono text-ink">{rwf(g.amount)}</td>
+                        <td className="px-4 py-2">
+                          <span className={cn("rounded px-2 py-0.5 text-xs font-medium", outcomeClass(g.outcome))}>
+                            {g.outcome}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
 
           {/* Network */}
           <section>

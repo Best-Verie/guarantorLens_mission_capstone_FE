@@ -259,9 +259,14 @@ export default function ApplicationDetail() {
               {app.branch ? ` · ${app.branch}` : ""} · by {app.created_by_name}
             </p>
           </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-            {STATUS_LABEL[app.status] ?? app.status}
-          </span>
+          <div className="flex items-center gap-3">
+            <Button variant="secondary" onClick={() => navigate(`/applications/${app.id}/report`)}>
+              Download PDF
+            </Button>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+              {STATUS_LABEL[app.status] ?? app.status}
+            </span>
+          </div>
         </div>
         <p className="mt-2 text-xs text-slate">
           New = just assessed · Escalated = sent to a credit manager · Reviewed = a recommendation was added.
