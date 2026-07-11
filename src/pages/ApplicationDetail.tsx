@@ -96,6 +96,7 @@ export default function ApplicationDetail() {
   const appId = Number(id);
   const user = getUser();
   const isOfficer = user?.role === "loan_officer";
+  const isManager = user?.role === "credit_manager" || user?.role === "admin";
   const [app, setApp] = useState<ApplicationOut | null>(null);
   const [drivers, setDrivers] = useState<ShapContribution[]>([]);
   const [brief, setBrief] = useState("");
@@ -599,18 +600,22 @@ export default function ApplicationDetail() {
             ))}
             {app.recommendations.length === 0 && <li className="text-sm text-slate">None yet.</li>}
           </ul>
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-            <select className="rounded-lg border border-line px-3 py-2 text-sm text-ink"
-                    value={recDecision} onChange={(e) => setRecDecision(e.target.value)}>
-              <option value="approve">Approve</option>
-              <option value="request_changes">Request changes</option>
-              <option value="decline">Decline</option>
-            </select>
-            <input className="flex-1 rounded-lg border border-line px-3 py-2 text-sm text-ink"
-                   placeholder="Add a note (e.g. add a guarantor with stronger savings)"
-                   value={recNote} onChange={(e) => setRecNote(e.target.value)} />
-            <Button variant="accent" onClick={doRecommend} disabled={busy}>Add</Button>
-          </div>
+          {isManager ? (
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <select className="rounded-lg border border-line px-3 py-2 text-sm text-ink"
+                      value={recDecision} onChange={(e) => setRecDecision(e.target.value)}>
+                <option value="approve">Approve</option>
+                <option value="request_changes">Request changes</option>
+                <option value="decline">Decline</option>
+              </select>
+              <input className="flex-1 rounded-lg border border-line px-3 py-2 text-sm text-ink"
+                     placeholder="Add a note (e.g. add a guarantor with stronger savings)"
+                     value={recNote} onChange={(e) => setRecNote(e.target.value)} />
+              <Button variant="accent" onClick={doRecommend} disabled={busy}>Add</Button>
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-slate">Only a credit manager can record a recommendation.</p>
+          )}
         </section>
       </div>
     </AppShell>

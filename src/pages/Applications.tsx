@@ -28,7 +28,8 @@ export default function Applications() {
   const user = getUser();
   const isManager = !!user && ["credit_manager", "admin"].includes(user.role);
   const [items, setItems] = useState<ApplicationListItem[]>([]);
-  const [escalatedOnly, setEscalatedOnly] = useState(false);
+  // Managers land on their review queue (escalated cases) first; officers see their own list.
+  const [escalatedOnly, setEscalatedOnly] = useState(isManager);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
