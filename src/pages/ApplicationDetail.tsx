@@ -46,6 +46,50 @@ function listDiff(before: string[], after: string[]) {
   };
 }
 
+/** A client-safe plain-language report: the borrower's OWN loan and what they can do.
+ *  Deliberately excludes guarantors' savings/defaults and the internal model breakdown. */
+function buildClientEmail(app: ApplicationOut, officerName?: string) {
+  const money = (n?: number | null) => (n == null ? "not on record" : "RWF " + Math.round(n).toLocaleString("en-US"));
+  const name = app.borrower_name || app.borrower_id || "Applicant";
+  const outcome: Record<string, string> = {
+    Low: "Based on the information provided, your application looks strong.",
+    Medium: "Your application is moderate. A few improvements would strengthen it before it can be approved.",
+    High: "As it stands, your application carries higher risk. The steps below would improve your chances of approval.",
+  };
+  const tips: string[] = [];
+  const ratio = app.amount / ((app.savings ?? 0) + 1);
+  if (ratio >= 3) tips.push("Build up more savings before borrowing, or request a smaller loan amount.");
+  else if (ratio >= 1.2) tips.push("Growing your savings a little more would strengthen the application.");
+  if (app.salary == null) tips.push("Provide proof of your income (a salary slip or business records).");
+  tips.push("Choose guarantors who have strong savings and a clean repayment record.");
+  if (app.band === "High") tips.push("A credit officer will review your application; you may be asked for more information.");
+
+  const lines = [
+    `Dear ${name},`,
+    ``,
+    `Thank you for your loan application. Here is a summary and a preliminary assessment to help you.`,
+    ``,
+    `YOUR APPLICATION`,
+    `- Loan amount requested: ${money(app.amount)}`,
+    `- Your savings on record: ${money(app.savings)}`,
+    `- Your salary on record: ${money(app.salary)}`,
+    ...(app.interest_rate != null ? [`- Interest rate: ${app.interest_rate}%`] : []),
+    ``,
+    `ASSESSMENT`,
+    outcome[app.band ?? ""] ?? "Your application has been assessed.",
+    ``,
+    `WHAT YOU CAN DO`,
+    ...tips.map((t) => `- ${t}`),
+    ``,
+    `This is a preliminary assessment to help you strengthen your application. It is not a final decision; the SACCO makes the final decision.`,
+    ``,
+    `Kind regards,`,
+    officerName || "Your loan officer",
+    `Umwalimu SACCO`,
+  ];
+  return { subject: `Your loan application assessment — ${name}`, body: lines.join("\n") };
+}
+
 export default function ApplicationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -70,6 +114,7 @@ export default function ApplicationDetail() {
   const [wfBusy, setWfBusy] = useState(false);
   const [explainTab, setExplainTab] = useState<"drivers" | "plain" | "todo">("plain");
   const [suggest, setSuggest] = useState<SuggestResult | null>(null);
+  const [clientEmail, setClientEmail] = useState("");
 
   // workflow state
   const [escNote, setEscNote] = useState("");
@@ -144,6 +189,13 @@ export default function ApplicationDetail() {
       if (Object.keys(entry).length) out[id] = entry;
     }
     return Object.keys(out).length ? out : undefined;
+  }
+
+  function emailClient() {
+    if (!app) return;
+    const { subject, body } = buildClientEmail(app, user?.full_name);
+    window.location.href =
+      `mailto:${encodeURIComponent(clientEmail.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 
   async function runWhatIf() {
@@ -486,6 +538,27 @@ export default function ApplicationDetail() {
             <p className="mt-2 text-xs text-slate">Real same-branch members, re-scored by the model. A suggestion, not a decision.</p>
           </section>
         )}
+
+        {/* Send a client-safe report to the applicant */}
+        <section className="mt-6 rounded-xl border border-line bg-white p-5">
+          <h2 className="text-sm font-semibold text-ink">Send report to the client</h2>
+          <p className="mt-1 text-xs text-slate">
+            Opens your email app with a plain-language summary of the client's own loan and what they can do.
+            It does <span className="font-medium">not</span> include any guarantor details or the internal score breakdown.
+          </p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <input
+              type="email"
+              className="flex-1 rounded-lg border border-line px-3 py-2 text-sm text-ink"
+              placeholder="client@email.com"
+              value={clientEmail}
+              onChange={(e) => setClientEmail(e.target.value)}
+            />
+            <Button variant="accent" onClick={emailClient} disabled={!clientEmail.trim()}>
+              Email to client
+            </Button>
+          </div>
+        </section>
 
         {/* Escalation */}
         <section className="mt-6 rounded-xl border border-line bg-white p-5">
