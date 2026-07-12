@@ -21,27 +21,20 @@ export default function AssessRisk() {
   const [amount, setAmount] = useState("");
   const [savings, setSavings] = useState("");
   const [salary, setSalary] = useState("");
-  const [interestRate, setInterestRate] = useState("13");
+  const [interestRate, setInterestRate] = useState("");
   const [guarantors, setGuarantors] = useState<string[]>([]);
   const [guarantorInput, setGuarantorInput] = useState("");
   const [exampleId, setExampleId] = useState("");
   // Optional up-to-date guarantor details the officer can enter (id -> raw string fields).
   const [gOv, setGOv] = useState<Record<string, { savings?: string; salary?: string; loans_backed?: string }>>({});
 
-  // Prefill a real, ready-to-run example from the deployed data (works with any dataset).
+  // Fetch a real member id only to show as an example placeholder. The form itself starts
+  // empty, so the officer types the actual loan being assessed.
   useEffect(() => {
     const token = getToken();
     if (!token) return;
     getExamples(token).then((e) => {
       if (e.member_ids[0]) setExampleId(e.member_ids[0]);
-      if (e.sample) {
-        setBorrowerId(e.sample.borrower_id);
-        setGuarantors(e.sample.guarantor_ids);
-        setAmount(String(e.sample.amount || ""));
-        if (e.sample.savings != null) setSavings(String(Math.round(e.sample.savings)));
-        if (e.sample.salary != null) setSalary(String(Math.round(e.sample.salary)));
-        if (e.sample.interest_rate != null) setInterestRate(String(e.sample.interest_rate));
-      }
     }).catch(() => {});
   }, []);
 
