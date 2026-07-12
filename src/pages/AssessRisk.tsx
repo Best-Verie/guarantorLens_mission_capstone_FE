@@ -92,6 +92,10 @@ export default function AssessRisk() {
       setError("Enter a loan amount.");
       return;
     }
+    if (guarantors.length === 0) {
+      setError("Add at least one guarantor. Every loan must be guarantor-backed.");
+      return;
+    }
     setSubmitting(true);
     try {
       const app = await createApplication(input, token);   // assess + save as an application
@@ -166,8 +170,8 @@ export default function AssessRisk() {
               </span>
             </div>
             <p className="mb-3 text-sm text-slate">
-              The members who back this loan. Use member IDs that exist in the network
-              {exampleId ? `, e.g. ${exampleId}` : ""}.
+              The members who back this loan. Every loan must have at least one guarantor. Use
+              member IDs that exist in the network{exampleId ? `, e.g. ${exampleId}` : ""}.
             </p>
 
             <div className="flex gap-2">

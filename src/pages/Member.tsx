@@ -17,11 +17,13 @@ const bandChip: Record<string, string> = {
   Low: "bg-emerald-100 text-emerald-700",
 };
 
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function Stat({ label, value, hint, muted }: { label: string; value: string; hint?: string; muted?: boolean }) {
   return (
     <div className="rounded-xl border border-line bg-white p-5">
       <div className="text-xs font-medium text-slate">{label}</div>
-      <div className="mt-1 text-2xl font-bold text-ink">{value}</div>
+      <div className={cn("mt-1 font-bold", muted ? "text-lg font-medium text-slate-400" : "text-2xl text-ink")}>
+        {value}
+      </div>
       {hint && <div className="mt-0.5 text-xs text-slate">{hint}</div>}
     </div>
   );
@@ -167,7 +169,7 @@ export default function Member() {
   }, [id, navigate]);
 
   const rwf = (n?: number | null) =>
-    n == null ? "not on file" : "RWF " + Math.round(n).toLocaleString("en-US");
+    n == null ? "Not on file" : "RWF " + Math.round(n).toLocaleString("en-US");
 
   return (
     <AppShell>
@@ -204,8 +206,8 @@ export default function Member() {
           <section className="mb-6">
             <h2 className="mb-2 text-sm font-semibold text-ink">Profile and place in the network</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Stat label="Savings" value={rwf(member.savings)} />
-              <Stat label="Salary" value={rwf(member.salary)} />
+              <Stat label="Savings" value={rwf(member.savings)} muted={member.savings == null} />
+              <Stat label="Salary" value={rwf(member.salary)} muted={member.salary == null} />
               <Stat label="Loans backed" value={String(member.loans_backed)} hint="Loans this member guarantees" />
               <Stat
                 label="Community default rate"
