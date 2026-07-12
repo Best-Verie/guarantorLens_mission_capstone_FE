@@ -96,7 +96,7 @@ export default function Applications() {
                 <th className="px-4 py-2 font-medium">Risk</th>
                 <th className="px-4 py-2 font-medium">Status</th>
                 {isManager && <th className="px-4 py-2 font-medium">Officer</th>}
-                <th className="px-4 py-2 font-medium">PDF</th>
+                <th className="px-4 py-2 font-medium">Report</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -131,7 +131,7 @@ export default function Applications() {
                       onClick={(e) => { e.stopPropagation(); navigate(`/applications/${a.id}/report`); }}
                       className="rounded border border-line px-2 py-0.5 text-xs font-medium text-brand hover:bg-brand-50"
                     >
-                      PDF
+                      Report
                     </button>
                   </td>
                 </tr>

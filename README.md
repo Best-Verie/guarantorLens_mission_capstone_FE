@@ -1,9 +1,12 @@
 # guarantorLens_mission_capstone_FE
 
-A github repo for ALU final yeaar mission capstone frontend 
-Built with [React](https://react.dev), [Vite](https://vitejs.dev), and [Tailwind CSS](https://tailwindcss.com). Deployed on [Vercel](https://vercel.com).
+Frontend for **GuarantorLens** — explainable, network-aware loan-default risk decision support for a savings and credit cooperative (ALU final-year mission capstone).
+Built with [React](https://react.dev), [TypeScript](https://www.typescriptlang.org), [Vite](https://vitejs.dev), and [Tailwind CSS](https://tailwindcss.com). Deployed on [Vercel](https://vercel.com).
 
 🔗 **Live demo:** https://guarantor-lens-mission-capstone-fe.vercel.app/
+🔗 **Backend API + model:** https://github.com/Best-Verie/guarantorLens_mission_capstone_BE (Swagger docs at `/docs`)
+
+> This app talks to the FastAPI backend. Set `VITE_API_URL` to the backend base URL (see below).
 
 ---
 
@@ -84,15 +87,15 @@ npm -v
 .
 ├── public/             # Static assets served as-is
 ├── src/
-│   ├── assets/         # Images, fonts, etc.
+│   ├── api/            # Typed API clients (risk, members, applications, insights)
 │   ├── components/     # Reusable React components
-│   ├── pages/          # Page-level components
-│   ├── App.jsx         # Root component
-│   ├── main.jsx        # App entry point
+│   ├── pages/          # Page-level components (AssessRisk, ApplicationDetail, Member, ...)
+│   ├── lib/            # Session/auth helpers
+│   ├── App.tsx         # Root component & routes
+│   ├── main.tsx        # App entry point
 │   └── index.css       # Tailwind directives & global styles
 ├── index.html          # HTML entry point
-├── tailwind.config.js  # Tailwind configuration
-├── vite.config.js      # Vite configuration
+├── vite.config.ts      # Vite configuration
 └── package.json
 ```
 
