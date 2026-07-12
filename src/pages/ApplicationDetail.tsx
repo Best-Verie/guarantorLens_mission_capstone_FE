@@ -293,7 +293,7 @@ export default function ApplicationDetail() {
                 <h2 className="text-lg font-bold text-ink">{app.band} risk</h2>
                 {app.reasons.some((r) => r.label.startsWith("Risk level raised")) && (
                   <p className="mt-0.5 text-xs font-medium text-red-600">
-                    Raised to {app.band} by guarantor flags (model score {app.risk_score}/100)
+                    Raised to {app.band} by guarantor-network flags (see the reasons below)
                   </p>
                 )}
                 <p className="mt-1 text-sm text-slate">
