@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Logo } from "../brand/Logo";
@@ -33,6 +34,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const user = getUser();
   const nav = user?.role === "admin" ? ADMIN_NAV : STAFF_NAV;
 
+  // On phones the sidebar is an off-canvas drawer toggled from the top bar.
+  const [menuOpen, setMenuOpen] = useState(false);
+
   function signOut() {
     clearSession();
     navigate("/login", { replace: true });
@@ -45,7 +49,22 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-line bg-white">
+      {/* Backdrop behind the open drawer on mobile */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          onClick={() => setMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 flex h-screen w-60 shrink-0 flex-col border-r border-line bg-white",
+          "transition-transform duration-200 lg:sticky lg:top-0 lg:translate-x-0",
+          menuOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
         <div className="px-5 py-5">
           <Logo theme="light" showSub={false} />
         </div>
@@ -60,6 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={n.to}
                 to={n.to}
+                onClick={() => setMenuOpen(false)}
                 className={cn(
                   "rounded-lg px-3 py-2.5 text-sm font-medium",
                   active ? "bg-brand-50 text-brand" : "text-slate hover:bg-slate-100 hover:text-ink"
@@ -80,8 +100,20 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top bar: signed-in identity */}
-        <header className="sticky top-0 z-10 flex h-16 items-center border-b border-line bg-white px-8">
+        {/* Top bar: menu toggle (mobile) + signed-in identity */}
+        <header className="sticky top-0 z-10 flex h-16 items-center border-b border-line bg-white px-4 sm:px-8">
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+            className="mr-3 rounded-lg p-2 text-slate hover:bg-slate-100 lg:hidden"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
           <div className="ml-auto flex items-center gap-4">
             {user && (
               <div className="text-right leading-tight">
@@ -97,7 +129,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 px-8 py-8">
+        <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
           <div className="mx-auto max-w-5xl">{children}</div>
         </main>
       </div>

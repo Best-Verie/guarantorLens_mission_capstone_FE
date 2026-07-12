@@ -261,7 +261,7 @@ export default function ApplicationDetail() {
           </div>
           <div className="flex items-center gap-3">
             <Button variant="secondary" onClick={() => navigate(`/applications/${app.id}/report`)}>
-              Download PDF
+              Download Report
             </Button>
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
               {STATUS_LABEL[app.status] ?? app.status}
