@@ -30,7 +30,7 @@ export default function Watchlist() {
 
   return (
     <AppShell>
-      <h1 className="text-2xl font-bold text-ink">Watchlist</h1>
+      <h1 className="text-2xl font-bold text-ink">NPL</h1>
       <p className="mt-1 text-sm text-slate">
         Active loans that are 90 or more days in arrears, most overdue first. These
         are caught before write-off, not after.
@@ -48,7 +48,7 @@ export default function Watchlist() {
               <div className="text-xs text-slate">90+ days in arrears</div>
             </div>
             <div className="rounded-xl border border-line bg-white p-5">
-              <div className="text-xs font-medium text-slate">Backed by a defaulter</div>
+              <div className="text-xs font-medium text-slate">Backed by a written-off member</div>
               <div className="mt-1 text-2xl font-bold text-ink">{backedCount}</div>
               <div className="text-xs text-slate">of the at-risk loans</div>
             </div>
@@ -93,7 +93,7 @@ export default function Watchlist() {
                     <td className="px-4 py-2">
                       {it.backed_by_defaulter ? (
                         <span className="rounded bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-600">
-                          Backed by a defaulter
+                          Backed by a written-off member
                         </span>
                       ) : (
                         <span className="text-xs text-slate">-</span>

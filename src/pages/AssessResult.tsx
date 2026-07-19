@@ -175,7 +175,7 @@ export default function AssessResult() {
       {/* Guarantor fix-it advisor (Medium/High loans) */}
       {suggest && suggest.suggestions.length > 0 && (
         <section className="mt-5 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 p-6">
-          <h2 className="text-sm font-semibold text-ink">How to make this loan more bankable</h2>
+          <h2 className="text-sm font-semibold text-ink">Fix-it advisor</h2>
           <p className="mt-1 text-sm text-slate">
             The current guarantee scores <span className="font-semibold">{suggest.current.band} {suggest.current.score}/100</span>.
             {suggest.weakest_current && <> The weakest current backer is <span className="font-mono">{suggest.weakest_current}</span>.</>}
@@ -224,7 +224,7 @@ export default function AssessResult() {
             <dd className="font-mono text-ink">{rwf(input.salary)}</dd>
           </div>
           <div className="flex justify-between border-b border-line py-1">
-            <dt className="text-slate">Guarantors who defaulted before</dt>
+            <dt className="text-slate">Guarantors written off before</dt>
             <dd className="font-mono text-ink">
               {result.network.guarantors_with_prior_default} of {result.network.n_guarantors}
             </dd>

@@ -95,7 +95,7 @@ function NetworkGraph({
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-full border-2 border-red-600" />
-          Has defaulted
+          Written off
         </span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
@@ -194,11 +194,11 @@ export default function Member() {
             </span>
             {member.ever_defaulted ? (
               <span className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600">
-                Has defaulted before{member.default_date ? ` (${member.default_date})` : ""}
+                Written off before{member.default_date ? ` (${member.default_date})` : ""}
               </span>
             ) : (
               <span className="rounded-lg bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
-                No past default
+                No past write-off
               </span>
             )}
           </div>
@@ -210,9 +210,9 @@ export default function Member() {
               <Stat label="Salary" value={rwf(member.salary)} muted={member.salary == null} />
               <Stat label="Loans backed" value={String(member.loans_backed)} hint="Loans this member guarantees" />
               <Stat
-                label="Community default rate"
+                label="Community write-off rate"
                 value={`${Math.round(member.community_default_rate * 100)}%`}
-                hint="Past defaults in their group"
+                hint="Past write-offs in their group"
               />
             </div>
           </section>

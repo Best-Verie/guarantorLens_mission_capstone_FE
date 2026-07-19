@@ -515,7 +515,7 @@ export default function ApplicationDetail() {
         {/* Guarantor fix-it advisor (Medium/High applications) */}
         {suggest && suggest.suggestions.length > 0 && (
           <section className="mt-6 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 p-5">
-            <h2 className="text-sm font-semibold text-ink">How to make this loan more bankable</h2>
+            <h2 className="text-sm font-semibold text-ink">Fix-it advisor</h2>
             <p className="mt-1 text-sm text-slate">
               A single guarantor change would lower the risk
               {suggest.branch && <> (only guarantors from the borrower's branch, <span className="font-medium">{suggest.branch}</span>, are suggested)</>}:

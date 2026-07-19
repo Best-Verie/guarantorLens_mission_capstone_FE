@@ -120,7 +120,7 @@ export default function MemberLookup() {
                 <td className="px-4 py-3 text-ink">{m.loans_backed}</td>
                 <td className="px-4 py-3">
                   {m.ever_defaulted ? (
-                    <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">Defaulted before</span>
+                    <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">Written off</span>
                   ) : (
                     <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Clean</span>
                   )}

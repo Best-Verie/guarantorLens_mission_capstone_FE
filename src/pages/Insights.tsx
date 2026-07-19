@@ -65,13 +65,13 @@ export default function Insights() {
           <h2 className="mt-6 text-sm font-semibold text-ink">Portfolio at a glance</h2>
           <div className="mt-2 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Loans" value={ov.n_loans.toLocaleString()} sub={`${money(ov.total_disbursed)} disbursed`} />
-            <Stat label="Default rate" value={pct(ov.bad_rate)} sub="of matured loans went bad" tone="red" />
+            <Stat label="Bad-loan rate" value={pct(ov.bad_rate)} sub="written off or 90+ in arrears" tone="red" />
             <Stat label="Money at risk" value={money(ov.arrears_value)} sub={`${ov.n_arrears} loans in arrears`} tone="amber" />
             <Stat label="Written off" value={money(ov.written_off_value)} sub="lost to bad loans" tone="red" />
             <Stat label="Members" value={ov.n_members.toLocaleString()} sub={`across ${Object.keys(ov.branches).length} branches`} />
             <Stat label="Guarantors" value={ov.unique_guarantors.toLocaleString()} sub={`${ov.avg_guarantors.toFixed(1)} per loan on average`} />
             <Stat label="Over-committed guarantors" value={ov.over_committed.toLocaleString()} sub="backing 8+ loans each" tone="amber" />
-            <Stat label="Loans backed by a defaulter" value={pct(ov.pct_backed_by_defaulter)} sub={`${ov.loans_backed_by_defaulter.toLocaleString()} loans`} tone="red" />
+            <Stat label="Loans with a written-off backer" value={pct(ov.pct_backed_by_defaulter)} sub={`${ov.loans_backed_by_defaulter.toLocaleString()} loans`} tone="red" />
           </div>
 
           {/* Outcomes + branches */}
@@ -110,8 +110,8 @@ export default function Insights() {
                 ))}
               </ul>
               <p className="mt-3 text-xs text-slate">
-                {ov.ever_defaulted.toLocaleString()} members have defaulted before ·
-                {" "}{ov.n_communities} guarantee communities · worst carries a {pct(ov.worst_community_rate)} default rate.
+                {ov.ever_defaulted.toLocaleString()} members written off before ·
+                {" "}{ov.n_communities} guarantee communities · worst carries a {pct(ov.worst_community_rate)} write-off rate.
               </p>
             </section>
           </div>
@@ -147,7 +147,7 @@ export default function Insights() {
                           </Link>
                           {m.ever_defaulted && (
                             <span className="ml-2 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-600">
-                              defaulted
+                              written off
                             </span>
                           )}
                         </td>
@@ -166,7 +166,7 @@ export default function Insights() {
             {/* Communities */}
             <section>
               <p className="mb-3 text-xs text-slate">
-                Guarantee communities ranked by their past default rate.
+                Guarantee communities ranked by their past write-off rate.
               </p>
               <div className="flex flex-col gap-2 rounded-xl border border-line bg-white p-4">
                 {comm.map((c) => (

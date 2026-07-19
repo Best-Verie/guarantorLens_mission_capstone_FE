@@ -4,9 +4,9 @@ import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
 import { Alert } from "../components/ui/Alert";
 import {
-  listUsers, setUserRole, deleteUser, getModelCard, getActivity, uploadModel, clearApplications,
+  listUsers, setUserRole, deleteUser, getModelCard, getDatasetInfo, getActivity, uploadModel, clearApplications,
 } from "../api/admin";
-import type { AdminUser, ModelCard, ActivityStats } from "../api/admin";
+import type { AdminUser, ModelCard, DatasetInfo, ActivityStats } from "../api/admin";
 import type { Role } from "../api/auth";
 import { ApiError } from "../api/http";
 import { getToken, getUser } from "../lib/session";
@@ -160,6 +160,7 @@ function UsersTab({ token, meId }: { token: string; meId?: number }) {
 /* ---------------- Model ---------------- */
 function ModelTab({ token }: { token: string }) {
   const [card, setCard] = useState<ModelCard | null>(null);
+  const [dataset, setDataset] = useState<DatasetInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [modelFile, setModelFile] = useState<File | null>(null);
@@ -171,6 +172,7 @@ function ModelTab({ token }: { token: string }) {
     getModelCard(token)
       .then(setCard)
       .catch((e) => setError(e instanceof ApiError ? e.message : "Could not load the model card."));
+    getDatasetInfo(token).then(setDataset).catch(() => {});
   }
   useEffect(load, [token]);
 
@@ -183,6 +185,7 @@ function ModelTab({ token }: { token: string }) {
       setCard(updated);
       setModelFile(null); setMembersFile(null); setLoansFile(null);
       setNote("New model deployed and now serving.");
+      getDatasetInfo(token).then(setDataset).catch(() => {});   // refresh the seed proof
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not deploy the model.");
     } finally { setBusy(false); }
@@ -258,6 +261,24 @@ function ModelTab({ token }: { token: string }) {
           </details>
         )}
       </section>
+
+      {/* Reference dataset proof (stored in the database) */}
+      {dataset && (
+        <section className="rounded-xl border border-line bg-white p-5">
+          <h2 className="text-base font-semibold text-ink">Reference dataset (in the database)</h2>
+          <p className="mt-1 text-xs text-slate">
+            Members, loans and guarantees are stored in PostgreSQL. Uploading new data deletes the
+            old dataset and re-seeds it — the timestamp and "rows replaced" below prove the last seed.
+          </p>
+          <dl className="mt-4 space-y-2 text-sm">
+            <Row k="Members" v={dataset.members.toLocaleString()} />
+            <Row k="Loans" v={dataset.loans.toLocaleString()} />
+            <Row k="Guarantees" v={dataset.guarantees.toLocaleString()} />
+            <Row k="Last seeded" v={dataset.seeded_at ? new Date(dataset.seeded_at).toLocaleString() : "not seeded"} />
+            <Row k="Rows replaced on last upload" v={dataset.deleted.toLocaleString()} />
+          </dl>
+        </section>
+      )}
 
       {/* Deploy a new model */}
       <section className="rounded-xl border-2 border-accent/40 bg-accent-50/40 p-5">

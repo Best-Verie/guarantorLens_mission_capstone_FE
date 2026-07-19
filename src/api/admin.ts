@@ -50,6 +50,18 @@ export function getModelCard(token: string): Promise<ModelCard> {
   return request<ModelCard>("/admin/model", { token });
 }
 
+export interface DatasetInfo {
+  seeded_at: string | null;
+  members: number;
+  loans: number;
+  guarantees: number;
+  deleted: number;
+}
+
+export function getDatasetInfo(token: string): Promise<DatasetInfo> {
+  return request<DatasetInfo>("/admin/dataset", { token });
+}
+
 export function getActivity(token: string): Promise<ActivityStats> {
   return request<ActivityStats>("/admin/activity", { token });
 }

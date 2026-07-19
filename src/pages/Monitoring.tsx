@@ -50,7 +50,7 @@ export default function Monitoring() {
           Predicted risk {early ? `(${early.filter((i) => i.band === "High").length} high)` : ""}
         </button>
         <button className={tabClass(tab === "overdue")} onClick={() => switchTab("overdue")}>
-          Overdue now {watch ? `(${watch.length})` : ""}
+          NPL {watch ? `(${watch.length})` : ""}
         </button>
       </div>
 
@@ -132,7 +132,7 @@ export default function Monitoring() {
                       <td className="px-4 py-2 font-mono font-semibold text-red-600">{it.days_in_arrears}</td>
                       <td className="px-4 py-2">
                         {it.backed_by_defaulter ? (
-                          <span className="rounded bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-600">Backed by a defaulter</span>
+                          <span className="rounded bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-600">Backed by a written-off member</span>
                         ) : <span className="text-xs text-slate">-</span>}
                       </td>
                     </tr>

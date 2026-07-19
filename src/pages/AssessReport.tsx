@@ -54,7 +54,7 @@ export default function AssessReport() {
             <p className="mt-1 text-sm text-slate">
               {input.borrower_id ? `Borrower ${input.borrower_id} · ` : ""}
               {input.guarantor_ids.length} guarantor(s) &middot;{" "}
-              {result.network.guarantors_with_prior_default} with a past default
+              {result.network.guarantors_with_prior_default} with a past write-off
             </p>
             <p className="mt-1 text-xs text-slate">
               Score source: {result.source === "model" ? "model" : "rule-based fallback"}
