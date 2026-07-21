@@ -12,11 +12,12 @@ import { ApiError } from "../api/http";
 import { getToken, getUser } from "../lib/session";
 
 const ROLE_LABELS: Record<string, string> = {
-  loan_officer: "Loan officer",
+  credit_staff: "Credit staff",
+  loan_officer: "Credit staff",   // legacy alias, same tier
   credit_manager: "Credit manager",
   admin: "Admin",
 };
-const ROLE_OPTIONS: Role[] = ["loan_officer", "credit_manager", "admin"];
+const ROLE_OPTIONS: Role[] = ["credit_staff", "credit_manager", "admin"];
 type Tab = "users" | "model" | "activity";
 
 export default function Admin() {

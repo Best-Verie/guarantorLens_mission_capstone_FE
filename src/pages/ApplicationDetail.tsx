@@ -95,8 +95,9 @@ export default function ApplicationDetail() {
   const navigate = useNavigate();
   const appId = Number(id);
   const user = getUser();
-  const isOfficer = user?.role === "loan_officer";
   const isManager = user?.role === "credit_manager" || user?.role === "admin";
+  // Any non-manager staff (credit staff / loan officer) can escalate their own application.
+  const isStaff = !!user && !isManager;
   const [app, setApp] = useState<ApplicationOut | null>(null);
   const [drivers, setDrivers] = useState<ShapContribution[]>([]);
   const [brief, setBrief] = useState("");
@@ -574,7 +575,7 @@ export default function ApplicationDetail() {
               Escalated to a credit manager for review
               {app.escalation_note ? `: "${app.escalation_note}"` : ""}.
             </p>
-          ) : isOfficer ? (
+          ) : isStaff ? (
             <>
               <p className="mt-1 text-sm text-slate">
                 Send this application to a credit manager to review.

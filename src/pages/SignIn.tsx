@@ -108,6 +108,12 @@ export default function SignIn() {
           Create an account
         </Link>
       </p>
+
+      <p className="mt-3 text-center text-xs text-slate">
+        <Link to="/legal" className="hover:underline">
+          Terms of Use &amp; Privacy Policy
+        </Link>
+      </p>
     </AuthLayout>
   );
 }

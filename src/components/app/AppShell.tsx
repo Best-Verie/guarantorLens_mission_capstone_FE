@@ -21,7 +21,8 @@ const ADMIN_NAV = [
 ];
 
 const ROLE_LABELS: Record<string, string> = {
-  loan_officer: "Loan officer",
+  credit_staff: "Credit staff",
+  loan_officer: "Credit staff",   // legacy alias, same tier
   credit_manager: "Credit manager",
   admin: "Admin",
 };
@@ -96,6 +97,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Button variant="secondary" onClick={signOut} className="w-full">
             Sign out
           </Button>
+          <Link
+            to="/legal"
+            onClick={() => setMenuOpen(false)}
+            className="mt-3 block text-center text-xs text-slate hover:text-ink hover:underline"
+          >
+            Terms &amp; Privacy
+          </Link>
         </div>
       </aside>
 

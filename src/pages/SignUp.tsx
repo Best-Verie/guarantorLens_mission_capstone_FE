@@ -14,7 +14,7 @@ import { ApiError } from "../api/http";
 import { saveSession } from "../lib/session";
 
 const ROLES: { value: Role; label: string }[] = [
-  { value: "loan_officer", label: "Loan officer" },
+  { value: "credit_staff", label: "Credit staff" },
   { value: "credit_manager", label: "Credit manager" },
   { value: "admin", label: "Admin" },
 ];

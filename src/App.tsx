@@ -15,6 +15,7 @@ import ApplicationDetail from "./pages/ApplicationDetail";
 import ApplicationReport from "./pages/ApplicationReport";
 import Monitoring from "./pages/Monitoring";
 import Admin from "./pages/Admin";
+import Legal from "./pages/Legal";
 import { RequireAuth } from "./components/auth/RequireAuth";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/signup" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/legal" element={<Legal />} />
         <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
         <Route path="/assess" element={<RequireAuth><AssessRisk /></RequireAuth>} />
         <Route path="/applications" element={<RequireAuth><Applications /></RequireAuth>} />
