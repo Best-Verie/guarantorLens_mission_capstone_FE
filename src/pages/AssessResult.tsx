@@ -8,14 +8,8 @@ import { SuggestionsTable } from "../components/app/SuggestionsTable";
 import { ReasonList } from "../components/app/ReasonList";
 import { cn } from "../lib/cn";
 import { suggestGuarantors } from "../api/risk";
-import type { AssessInput, AssessResult, Reason, SuggestResult } from "../api/risk";
+import type { AssessInput, AssessResult, SuggestResult } from "../api/risk";
 import { getToken, getUser } from "../lib/session";
-
-const bandChipCls: Record<string, string> = {
-  High: "bg-red-100 text-red-700",
-  Medium: "bg-amber-100 text-amber-700",
-  Low: "bg-emerald-100 text-emerald-700",
-};
 
 export default function AssessResult() {
   const navigate = useNavigate();
