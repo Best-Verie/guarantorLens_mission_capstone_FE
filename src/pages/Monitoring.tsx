@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/app/AppShell";
 import { Alert } from "../components/ui/Alert";
-import { getWatchlist, getEarlyWarning } from "../api/insights";
-import type { WatchlistItem, EarlyWarningItem } from "../api/insights";
+import { getWatchlist, getEarlyWarning, getSurvival } from "../api/insights";
+import type { WatchlistItem, EarlyWarningItem, Survival } from "../api/insights";
+import { SurvivalChart } from "../components/app/SurvivalChart";
 import { ApiError } from "../api/http";
 import { getToken } from "../lib/session";
 
@@ -22,6 +23,7 @@ export default function Monitoring() {
   const [page, setPage] = useState(1);
   const [early, setEarly] = useState<EarlyWarningItem[] | null>(null);
   const [watch, setWatch] = useState<WatchlistItem[] | null>(null);
+  const [surv, setSurv] = useState<Survival | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,6 +31,7 @@ export default function Monitoring() {
     if (!token) { navigate("/login", { replace: true }); return; }
     getEarlyWarning(token).then(setEarly).catch((e) => setError(e instanceof ApiError ? e.message : "Something went wrong."));
     getWatchlist(token).then(setWatch).catch(() => {});
+    getSurvival(token).then(setSurv).catch(() => {});
   }, [navigate]);
 
   function switchTab(t: Tab) { setTab(t); setPage(1); }
@@ -44,6 +47,20 @@ export default function Monitoring() {
       <p className="mt-1 text-sm text-slate">
         Active loans to keep an eye on: those predicted at risk before they go late, and those already overdue.
       </p>
+
+      {surv && (
+        <section className="mt-5 rounded-xl border border-line bg-white p-5">
+          <h2 className="text-sm font-semibold text-ink">How long loans last (survival analysis)</h2>
+          <p className="mt-1 text-sm text-slate">
+            Share of loans still performing as months pass (Kaplan-Meier). About{" "}
+            <span className="font-medium text-ink">
+              {Math.round((surv.summary.find((s) => s.group === "all")?.s24 ?? 1) * 100)}%
+            </span>{" "}
+            are still performing at 24 months; larger loans dip soonest.
+          </p>
+          <div className="mt-3 max-w-2xl"><SurvivalChart data={surv} /></div>
+        </section>
+      )}
 
       <div className="mt-5 inline-flex rounded-lg border border-line bg-white p-1">
         <button className={tabClass(tab === "early")} onClick={() => switchTab("early")}>
@@ -117,7 +134,7 @@ export default function Monitoring() {
                     <th className="px-4 py-2 font-medium">Branch</th>
                     <th className="px-4 py-2 font-medium">Amount</th>
                     <th className="px-4 py-2 font-medium">Days late</th>
-                    <th className="px-4 py-2 font-medium">Flag</th>
+                    <th className="px-4 py-2 font-medium">Why at risk</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
@@ -133,6 +150,8 @@ export default function Monitoring() {
                       <td className="px-4 py-2">
                         {it.backed_by_defaulter ? (
                           <span className="rounded bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-600">Backed by a written-off member</span>
+                        ) : it.reason ? (
+                          <span className="text-xs text-slate">{it.reason}</span>
                         ) : <span className="text-xs text-slate">-</span>}
                       </td>
                     </tr>

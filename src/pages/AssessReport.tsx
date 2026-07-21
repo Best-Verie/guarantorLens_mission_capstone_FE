@@ -45,6 +45,11 @@ export default function AssessReport() {
           </div>
         </div>
 
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+          Internal SACCO document, for the loan officer and credit manager. Do not share with the applicant:
+          it contains guarantor details. The applicant receives a separate summary by email.
+        </div>
+
         <div className="mt-6 flex items-center gap-6">
           <ScoreGauge score={result.risk_score} band={result.band} />
           <div>

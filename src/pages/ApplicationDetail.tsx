@@ -5,6 +5,8 @@ import { Button } from "../components/ui/Button";
 import { Alert } from "../components/ui/Alert";
 import { ScoreGauge } from "../components/app/ScoreGauge";
 import { ScoreDrivers } from "../components/app/ScoreDrivers";
+import { SuggestionsTable } from "../components/app/SuggestionsTable";
+import { ReasonList } from "../components/app/ReasonList";
 import {
   getApplication, escalateApplication, addRecommendation,
 } from "../api/applications";
@@ -311,6 +313,26 @@ export default function ApplicationDetail() {
                 </ul>
               </>
             )}
+            {(app.unusual?.unusual || app.segment) && (
+              <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-line pt-4 text-xs">
+                {app.unusual?.unusual && (
+                  <span
+                    className="rounded-lg bg-amber-50 px-2.5 py-1 font-medium text-amber-700"
+                    title="Isolation Forest: this application's profile is unusual for the book. Unusual applications default about 3x more often on average, so it is worth a closer look."
+                  >
+                    Unusual application
+                  </span>
+                )}
+                {app.segment && (
+                  <span className="text-slate">
+                    Borrower segment: <span className="font-medium text-ink">{app.segment.description}</span>
+                    {app.segment.segment_write_off_rate != null && (
+                      <> &middot; this segment's write-off rate {(app.segment.segment_write_off_rate * 100).toFixed(1)}%</>
+                    )}
+                  </span>
+                )}
+              </div>
+            )}
           </section>
 
           {/* What-if card (highlighted, sits next to the result) */}
@@ -448,7 +470,7 @@ export default function ApplicationDetail() {
           // Plain language first (default), then the driver bars, then recommendations.
           const available = [
             drivers.length > 0 ? "plain" : null,
-            drivers.length > 0 ? "drivers" : null,
+            drivers.length > 0 && isManager ? "drivers" : null,   // technical SHAP tab: managers only
             recommendations.length > 0 ? "todo" : null,
           ].filter(Boolean) as ("drivers" | "plain" | "todo")[];
           if (available.length === 0) return null;
@@ -474,27 +496,16 @@ export default function ApplicationDetail() {
               {active === "drivers" && <ScoreDrivers shap={drivers} />}
 
               {active === "plain" && (
-                <ul className="space-y-2.5 text-sm">
-                  {drivers.map((d) => (
-                    <li key={d.feature} className="flex gap-2.5">
-                      <span
-                        className={
-                          "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold " +
-                          (d.direction === "up" ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700")
-                        }
-                      >
-                        {d.direction === "up" ? "↑" : "↓"}
-                      </span>
-                      <span className="text-ink">
-                        <span className="font-semibold">{d.label}</span>
-                        {d.kind === "network" && (
-                          <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide text-accent-600">Network</span>
-                        )}
-                        {" — "}{d.plain ?? (d.direction === "up" ? "raises the risk." : "lowers the risk.")}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                <ReasonList
+                  band={app.band ?? undefined}
+                  items={drivers.map((d) => ({
+                    key: d.feature,
+                    label: d.label,
+                    direction: d.direction,
+                    kind: d.kind,
+                    text: d.plain ?? (d.direction === "up" ? "raises the risk." : "lowers the risk."),
+                  }))}
+                />
               )}
 
               {active === "todo" && (
@@ -521,27 +532,7 @@ export default function ApplicationDetail() {
               A single guarantor change would lower the risk
               {suggest.branch && <> (only guarantors from the borrower's branch, <span className="font-medium">{suggest.branch}</span>, are suggested)</>}:
             </p>
-            <ul className="mt-3 space-y-2">
-              {suggest.suggestions.map((s, i) => (
-                <li key={i} className="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm">
-                  <span className="text-emerald-700">&rarr;</span>
-                  {s.action === "swap" ? (
-                    <span>Swap out <span className="font-mono text-red-600">{s.remove}</span> for <span className="font-mono text-brand">{s.add}</span></span>
-                  ) : (
-                    <span>Add <span className="font-mono text-brand">{s.add}</span> as a guarantor</span>
-                  )}
-                  <span className="text-xs text-slate">
-                    ({rwf(s.add_savings)} savings, backs {s.add_loans_backed}{s.add_branch ? `, ${s.add_branch}` : ""})
-                  </span>
-                  <span className="ml-auto flex items-center gap-2">
-                    <span className={"rounded px-2 py-0.5 text-xs font-medium " + (bandClass[s.new_band] ?? "")}>
-                      {s.new_band} {s.new_score}/100
-                    </span>
-                    <span className="text-xs font-medium text-emerald-700">{s.delta}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <SuggestionsTable suggestions={suggest.suggestions} />
             <p className="mt-2 text-xs text-slate">Real same-branch members, re-scored by the model. A suggestion, not a decision.</p>
           </section>
         )}

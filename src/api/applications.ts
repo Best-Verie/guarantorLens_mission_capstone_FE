@@ -28,6 +28,8 @@ export interface ApplicationOut {
   probability?: number | null;
   reasons: Reason[];
   flags: string[];
+  segment?: { id: number; description: string; segment_write_off_rate?: number | null } | null;
+  unusual?: { unusual: boolean; score: number } | null;
   source?: string | null;
   status: string;
   escalation_note?: string | null;

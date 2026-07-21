@@ -14,25 +14,7 @@ const bandClass: Record<string, string> = {
   Low: "bg-emerald-100 text-emerald-700",
 };
 
-const STEPS = [
-  {
-    n: "1",
-    title: "Assess a loan",
-    body: "Score a borrower using their finances and their guarantor network. Every score comes with the reasons behind it.",
-  },
-  {
-    n: "2",
-    title: "Escalate & recommend",
-    body: "Officers send tricky cases to a credit manager, who adds a recommendation. The tool advises; the SACCO decides.",
-  },
-  {
-    n: "3",
-    title: "Monitor the portfolio",
-    body: "See active loans predicted to go bad before they fall 90 days late, so you can act early.",
-  },
-];
-
-/** Signed-in landing: explains the tool, then shows a live early-warning snapshot. */
+/** Signed-in landing: quick actions plus a live early-warning snapshot. */
 export default function Dashboard() {
   const user = getUser();
   const [items, setItems] = useState<EarlyWarningItem[] | null>(null);
@@ -56,13 +38,10 @@ export default function Dashboard() {
           Welcome{user ? `, ${user.full_name.split(" ")[0]}` : ""}
         </p>
         <h1 className="mt-2 text-3xl font-bold text-ink">
-          GuarantorLens helps you judge loan risk, with the reasons behind it.
+          Judge loan risk, with the reasons behind it.
         </h1>
         <p className="mt-3 max-w-2xl text-slate">
-          It scores a loan using both the borrower's finances and the strength of their
-          guarantor network, explains every score in plain language, and flags loans to
-          watch before they go bad. It is decision support for Umwalimu SACCO officers,
-          not an automatic approve-or-decline.
+          Score a loan, see why, and catch trouble early. GuarantorLens advises; you decide.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link to="/assess">
@@ -73,19 +52,6 @@ export default function Dashboard() {
           </Link>
         </div>
       </section>
-
-      {/* How it works */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        {STEPS.map((s) => (
-          <div key={s.n} className="rounded-xl border border-line bg-white p-5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-50 text-sm font-bold text-brand">
-              {s.n}
-            </div>
-            <h2 className="mt-3 text-base font-semibold text-ink">{s.title}</h2>
-            <p className="mt-1 text-sm text-slate">{s.body}</p>
-          </div>
-        ))}
-      </div>
 
       {/* Live snapshot */}
       <div className="mt-6 grid gap-6 lg:grid-cols-3">

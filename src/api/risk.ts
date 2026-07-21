@@ -35,6 +35,8 @@ export interface AssessResult {
   flags: string[];
   network: NetworkInfo;
   uids: Record<string, string>;   // account number -> opaque url id (borrower + guarantors)
+  segment?: { id: number; description: string; segment_write_off_rate?: number | null } | null;
+  unusual?: { unusual: boolean; score: number } | null;
 }
 
 export interface GuarantorOverride {

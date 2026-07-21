@@ -171,6 +171,12 @@ export default function Member() {
   const rwf = (n?: number | null) =>
     n == null ? "Not on file" : "RWF " + Math.round(n).toLocaleString("en-US");
 
+  // Per-backer attributes (loans backed, ever-defaulted) come from the ego-network nodes.
+  const nodeById: Record<string, NetNode> = {};
+  (member?.network.nodes ?? []).forEach((n) => { nodeById[n.id] = n; });
+  // Only show the Amount column for guarantees when at least one loan actually has an amount on file.
+  const showGuaranteeAmount = (member?.guarantees_given ?? []).some((g) => g.amount != null && g.amount > 0);
+
   return (
     <AppShell>
       <div className="mb-6 flex items-center justify-between">
@@ -212,7 +218,7 @@ export default function Member() {
               <Stat
                 label="Community write-off rate"
                 value={`${Math.round(member.community_default_rate * 100)}%`}
-                hint="Past write-offs in their group"
+                hint="Write-offs in their guarantee community (portfolio ~2%)"
               />
             </div>
           </section>
@@ -315,10 +321,33 @@ export default function Member() {
             {member.backers.length === 0 ? (
               <p className="text-sm text-slate">No one guarantees this member's loans.</p>
             ) : (
-              <div className="flex flex-wrap gap-2">
-                {member.backers.map((b) => (
-                  <MemberChip key={b} id={b} uid={member.uids[b]} />
-                ))}
+              <div className="overflow-hidden rounded-xl border border-line bg-white">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 text-left text-xs text-slate">
+                    <tr>
+                      <th className="px-4 py-2 font-medium">Guarantor</th>
+                      <th className="px-4 py-2 font-medium text-right">Loans backed</th>
+                      <th className="px-4 py-2 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {member.backers.map((b) => {
+                      const n = nodeById[b];
+                      return (
+                        <tr key={b}>
+                          <td className="px-4 py-2"><MemberChip id={b} uid={member.uids[b]} /></td>
+                          <td className="px-4 py-2 text-right text-ink">{n ? n.loans_backed : "—"}</td>
+                          <td className="px-4 py-2">
+                            <span className={cn("rounded px-2 py-0.5 text-xs font-medium",
+                              n?.ever_defaulted ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")}>
+                              {n?.ever_defaulted ? "Written off" : "Clean"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </section>
@@ -336,7 +365,7 @@ export default function Member() {
                   <thead className="bg-slate-50 text-left text-xs text-slate">
                     <tr>
                       <th className="px-4 py-2 font-medium">Borrower</th>
-                      <th className="px-4 py-2 font-medium">Amount</th>
+                      {showGuaranteeAmount && <th className="px-4 py-2 font-medium">Amount</th>}
                       <th className="px-4 py-2 font-medium">Status</th>
                     </tr>
                   </thead>
@@ -344,7 +373,7 @@ export default function Member() {
                     {member.guarantees_given.map((g) => (
                       <tr key={g.loan_key}>
                         <td className="px-4 py-2"><MemberChip id={g.borrower} uid={member.uids[g.borrower]} /></td>
-                        <td className="px-4 py-2 font-mono text-ink">{rwf(g.amount)}</td>
+                        {showGuaranteeAmount && <td className="px-4 py-2 font-mono text-ink">{rwf(g.amount)}</td>}
                         <td className="px-4 py-2">
                           <span className={cn("rounded px-2 py-0.5 text-xs font-medium", outcomeClass(g.outcome))}>
                             {g.outcome}

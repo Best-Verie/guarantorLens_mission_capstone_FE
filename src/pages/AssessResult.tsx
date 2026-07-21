@@ -4,47 +4,18 @@ import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
 import { ScoreGauge } from "../components/app/ScoreGauge";
 import { ScoreDrivers } from "../components/app/ScoreDrivers";
+import { SuggestionsTable } from "../components/app/SuggestionsTable";
+import { ReasonList } from "../components/app/ReasonList";
 import { cn } from "../lib/cn";
 import { suggestGuarantors } from "../api/risk";
 import type { AssessInput, AssessResult, Reason, SuggestResult } from "../api/risk";
-import { getToken } from "../lib/session";
+import { getToken, getUser } from "../lib/session";
 
 const bandChipCls: Record<string, string> = {
   High: "bg-red-100 text-red-700",
   Medium: "bg-amber-100 text-amber-700",
   Low: "bg-emerald-100 text-emerald-700",
 };
-
-function ReasonRow({ r }: { r: Reason }) {
-  const up = r.direction === "up";
-  return (
-    <li className="flex gap-3 py-2.5">
-      <span
-        className={cn(
-          "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-bold",
-          up ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"
-        )}
-        title={up ? "Raises risk" : "Lowers risk"}
-      >
-        {up ? "↑" : "↓"}
-      </span>
-      <div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-ink">{r.label}</span>
-          <span
-            className={cn(
-              "rounded px-1.5 py-0.5 text-[11px] font-medium",
-              r.kind === "network" ? "bg-accent-50 text-accent-600" : "bg-brand-50 text-brand"
-            )}
-          >
-            {r.kind === "network" ? "Network" : "Individual"}
-          </span>
-        </div>
-        <p className="text-sm text-slate">{r.detail}</p>
-      </div>
-    </li>
-  );
-}
 
 export default function AssessResult() {
   const navigate = useNavigate();
@@ -55,6 +26,9 @@ export default function AssessResult() {
   if (!state) return <Navigate to="/assess" replace />;
 
   const { result, input } = state;
+  // The SHAP driver bars are the technical evidence layer: show them to credit managers, not front-line staff.
+  const role = getUser()?.role;
+  const isManager = role === "credit_manager" || role === "admin";
   const rwf = (n?: number | null) =>
     n == null ? "not on file" : "RWF " + Math.round(n).toLocaleString("en-US");
 
@@ -142,18 +116,44 @@ export default function AssessResult() {
             })}
           </div>
 
-          {result.shap.length > 0 && <div className="mt-6"><ScoreDrivers shap={result.shap} /></div>}
+          {(result.unusual?.unusual || result.segment) && (
+            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-line pt-4 text-xs">
+              {result.unusual?.unusual && (
+                <span
+                  className="rounded-lg bg-amber-50 px-2.5 py-1 font-medium text-amber-700"
+                  title="Isolation Forest: this application's profile is unusual for the book. Unusual applications default about 3x more often on average, so it is worth a closer look."
+                >
+                  Unusual application
+                </span>
+              )}
+              {result.segment && (
+                <span className="text-slate">
+                  Borrower segment: <span className="font-medium text-ink">{result.segment.description}</span>
+                  {result.segment.segment_write_off_rate != null && (
+                    <> &middot; this segment's write-off rate {(result.segment.segment_write_off_rate * 100).toFixed(1)}%</>
+                  )}
+                </span>
+              )}
+            </div>
+          )}
+
+          {isManager && result.shap.length > 0 && <div className="mt-6"><ScoreDrivers shap={result.shap} /></div>}
 
           <h2 className="mt-6 text-sm font-semibold text-ink">
             {result.shap.length > 0 ? "In plain language" : "Why this score"}
           </h2>
-          <ul className="mt-1 divide-y divide-line">
+          <div className="mt-2">
             {result.reasons.length > 0 ? (
-              result.reasons.map((r) => <ReasonRow key={r.label} r={r} />)
+              <ReasonList
+                band={result.band}
+                items={result.reasons.map((r) => ({
+                  key: r.label, label: r.label, direction: r.direction, kind: r.kind, text: r.detail,
+                }))}
+              />
             ) : (
-              <li className="py-2.5 text-sm text-slate">No strong factors either way.</li>
+              <p className="py-2.5 text-sm text-slate">No strong factors either way.</p>
             )}
-          </ul>
+          </div>
 
           {result.recommendations.length > 0 && (
             <>
@@ -182,27 +182,7 @@ export default function AssessResult() {
             {" "}A single change would lower the risk
             {suggest.branch && <> (only guarantors from the borrower's branch, <span className="font-medium">{suggest.branch}</span>, are suggested)</>}:
           </p>
-          <ul className="mt-3 space-y-2">
-            {suggest.suggestions.map((s, i) => (
-              <li key={i} className="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm">
-                <span className="text-emerald-700">&rarr;</span>
-                {s.action === "swap" ? (
-                  <span>Swap out <span className="font-mono text-red-600">{s.remove}</span> for <span className="font-mono text-brand">{s.add}</span></span>
-                ) : (
-                  <span>Add <span className="font-mono text-brand">{s.add}</span> as a guarantor</span>
-                )}
-                <span className="text-xs text-slate">
-                  ({rwf(s.add_savings)} savings, backs {s.add_loans_backed})
-                </span>
-                <span className="ml-auto flex items-center gap-2">
-                  <span className={cn("rounded px-2 py-0.5 text-xs font-medium", bandChipCls[s.new_band] ?? "")}>
-                    {s.new_band} {s.new_score}/100
-                  </span>
-                  <span className="text-xs font-medium text-emerald-700">{s.delta}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
+          <SuggestionsTable suggestions={suggest.suggestions} />
           <p className="mt-2 text-xs text-slate">Real members from the book, re-scored by the model. A suggestion to help you decide, not a decision.</p>
         </section>
       )}

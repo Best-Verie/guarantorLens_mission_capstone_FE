@@ -9,6 +9,7 @@ export interface WatchlistItem {
   amount: number;
   days_in_arrears: number;
   backed_by_defaulter: boolean;
+  reason?: string;
 }
 
 export interface SuperGuarantor {
@@ -25,6 +26,17 @@ export interface CommunityStat {
   branch?: string | null;
   size: number;
   default_rate: number;
+}
+
+export interface SurvivalPoint { month: number; survival: number; }
+export interface Survival {
+  overall: SurvivalPoint[];
+  by_tier: { small: SurvivalPoint[]; medium: SurvivalPoint[]; large: SurvivalPoint[] };
+  summary: { group: string; s12: number; s24: number }[];
+  observed_to: string;
+}
+export function getSurvival(token: string): Promise<Survival> {
+  return request<Survival>("/insights/survival", { token });
 }
 
 export function getWatchlist(token: string): Promise<WatchlistItem[]> {

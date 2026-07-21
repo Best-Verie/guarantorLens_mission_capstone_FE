@@ -37,12 +37,12 @@ export default function SignIn() {
 
   return (
     <AuthLayout
-      panelHeading="Make informed loan decisions."
-      panelSub="Sign in to check how risky a loan looks. You get a simple score and clear reasons, using the SACCO's own records."
+      panelHeading="Know the risk before you lend."
+      panelSub="GuarantorLens scores each loan from the borrower and their guarantor network, explains every score in plain words, and flags trouble early. It advises; you decide."
       points={[
-        "A risk score with the reasons behind it",
-        "View loans that are falling behind",
-        "Help to decide, never an automatic yes or no",
+        "A 0 to 100 risk score with the reasons behind it",
+        "Reads the guarantor network, not just the borrower",
+        "Catches risky loans before they fall 90 days behind",
       ]}
     >
       <div className="mb-7">
