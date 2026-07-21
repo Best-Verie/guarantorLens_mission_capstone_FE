@@ -59,6 +59,12 @@ export default function Monitoring() {
             are still performing at 24 months; larger loans dip soonest.
           </p>
           <div className="mt-3 max-w-2xl"><SurvivalChart data={surv} /></div>
+          <p className="mt-2 max-w-2xl text-xs text-slate">
+            How to read it: each line starts at 100% (every loan still performing) and steps down a little
+            each time a loan is written off. At any month, the height is the share of loans that have lasted
+            that long without being written off. A line that sits lower is riskier. We show the first 24
+            months, where loans from every part of the book are represented.
+          </p>
         </section>
       )}
 
@@ -122,6 +128,11 @@ export default function Monitoring() {
         <>
           <p className="mt-4 text-sm text-slate">
             Active loans <span className="font-medium">already 90+ days in arrears</span>, most overdue first. Chase these now.
+          </p>
+          <p className="mt-1 text-xs text-slate">
+            "Why at risk" is the strongest signal we can see for each loan: a guarantor-network flag first (a
+            written-off or over-committed guarantor), otherwise the borrower's own history (an <span className="italic">earlier</span> loan
+            that was written off) or the loan size. It explains what stands out, not why the loan fell behind.
           </p>
           {watch === null && <p className="mt-4 text-sm text-slate">Loading...</p>}
           {watch && (

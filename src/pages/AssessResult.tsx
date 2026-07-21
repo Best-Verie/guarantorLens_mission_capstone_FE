@@ -128,6 +128,12 @@ export default function AssessResult() {
                   )}
                 </span>
               )}
+              {result.unusual?.unusual && (
+                <span className="basis-full text-slate">
+                  "Unusual" means this profile is atypical for the book (from an anomaly model). Applications
+                  flagged this way default about 3x more often, so take a closer look. It is a prompt, not a verdict.
+                </span>
+              )}
             </div>
           )}
 
