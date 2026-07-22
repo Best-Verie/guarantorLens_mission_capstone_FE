@@ -6,6 +6,7 @@ import { ScoreGauge } from "../components/app/ScoreGauge";
 import { getApplication } from "../api/applications";
 import type { ApplicationOut } from "../api/applications";
 import { getToken, getUser } from "../lib/session";
+import { redactIds } from "../lib/redact";
 
 /** Print-friendly one-page report for a saved application. Use the browser's "Save as PDF". */
 export default function ApplicationReport() {
@@ -43,8 +44,8 @@ export default function ApplicationReport() {
         </div>
 
         <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
-          Internal SACCO document, for the loan officer and credit manager. Do not share with the applicant:
-          it contains guarantor details. The applicant receives a separate summary by email.
+          Internal SACCO decision-support document — confidential, keep within the SACCO. Individual
+          guarantors are not named. The applicant receives their own plain-language summary by email.
         </div>
 
         <div className="mt-6 flex items-center gap-6">
@@ -74,7 +75,7 @@ export default function ApplicationReport() {
             app.reasons.map((r) => (
               <li key={r.label} className="text-ink">
                 <span className="font-semibold">{r.direction === "up" ? "Raises risk" : "Lowers risk"}:</span>{" "}
-                {r.label} ({r.kind}). {r.detail}
+                {r.label} ({r.kind}). {redactIds(r.detail)}
               </li>
             ))
           ) : (
@@ -89,7 +90,7 @@ export default function ApplicationReport() {
             <tr><td className="py-1.5 text-slate">Savings</td><td className="py-1.5 text-right font-mono text-ink">{rwf(app.savings)}</td></tr>
             <tr><td className="py-1.5 text-slate">Salary</td><td className="py-1.5 text-right font-mono text-ink">{rwf(app.salary)}</td></tr>
             <tr><td className="py-1.5 text-slate">Interest rate</td><td className="py-1.5 text-right font-mono text-ink">{app.interest_rate != null ? `${app.interest_rate}%` : "not on file"}</td></tr>
-            <tr><td className="py-1.5 text-slate">Guarantors</td><td className="py-1.5 text-right font-mono text-ink">{app.guarantor_ids.join(", ") || "none"}</td></tr>
+            <tr><td className="py-1.5 text-slate">Guarantors</td><td className="py-1.5 text-right font-mono text-ink">{app.guarantor_ids.length || "none"}</td></tr>
           </tbody>
         </table>
 
@@ -101,7 +102,7 @@ export default function ApplicationReport() {
                 <li key={r.id}>
                   <span className="font-semibold">{r.decision.replace("_", " ")}</span>
                   <span className="text-slate"> · {r.author_name} ({r.author_role})</span>
-                  {r.note ? ` — ${r.note}` : ""}
+                  {r.note ? ` — ${redactIds(r.note)}` : ""}
                 </li>
               ))}
             </ul>

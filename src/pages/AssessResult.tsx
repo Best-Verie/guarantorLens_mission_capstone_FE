@@ -2,11 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
-import { ScoreGauge } from "../components/app/ScoreGauge";
-import { ScoreDrivers } from "../components/app/ScoreDrivers";
+import { RiskStoryCard } from "../components/app/RiskStoryCard";
 import { SuggestionsTable } from "../components/app/SuggestionsTable";
-import { ReasonList } from "../components/app/ReasonList";
-import { cn } from "../lib/cn";
 import { suggestGuarantors } from "../api/risk";
 import type { AssessInput, AssessResult, SuggestResult } from "../api/risk";
 import { getToken, getUser } from "../lib/session";
@@ -68,109 +65,21 @@ export default function AssessResult() {
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        {/* Score */}
-        <section className="flex flex-col items-center rounded-xl border border-line bg-white p-6">
-          <ScoreGauge score={result.risk_score} band={result.band} />
-          {result.reasons.some((r) => r.label.startsWith("Risk level raised")) ? (
-            <p className="mt-3 text-center text-xs font-medium text-red-600">
-              Raised to {result.band} by guarantor flags (model score {result.risk_score}/100)
-            </p>
-          ) : (
-            <p className="mt-3 text-center text-sm text-slate">Risk level from the model</p>
-          )}
-          <span className="mt-1 text-xs text-slate">
-            Source: {result.source === "model" ? "model" : "rule-based fallback"}
-          </span>
-        </section>
-
-        {/* Reasons + flags */}
-        <section className="rounded-xl border border-line bg-white p-6 lg:col-span-2">
-          {result.brief && (
-            <div className="mb-5 rounded-lg border-l-4 border-brand bg-brand-50/60 px-4 py-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">Officer brief</h2>
-              <p className="mt-1 text-sm leading-relaxed text-ink">{result.brief}</p>
-            </div>
-          )}
-          <h2 className="text-sm font-semibold text-ink">Guarantor-network flags</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {result.flags.map((f) => {
-              const notable = !f.startsWith("No notable");
-              return (
-                <span
-                  key={f}
-                  className={cn(
-                    "rounded-lg px-2.5 py-1 text-xs font-medium",
-                    notable ? "bg-accent-50 text-accent-600" : "bg-slate-100 text-slate"
-                  )}
-                >
-                  {f}
-                </span>
-              );
-            })}
-          </div>
-
-          {(result.unusual?.unusual || result.segment) && (
-            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-line pt-4 text-xs">
-              {result.unusual?.unusual && (
-                <span
-                  className="rounded-lg bg-amber-50 px-2.5 py-1 font-medium text-amber-700"
-                  title="Isolation Forest: this application's profile is unusual for the book. Unusual applications default about 3x more often on average, so it is worth a closer look."
-                >
-                  Unusual application
-                </span>
-              )}
-              {result.segment && (
-                <span className="text-slate">
-                  Borrower segment: <span className="font-medium text-ink">{result.segment.description}</span>
-                  {result.segment.segment_write_off_rate != null && (
-                    <> &middot; this segment's write-off rate {(result.segment.segment_write_off_rate * 100).toFixed(1)}%</>
-                  )}
-                </span>
-              )}
-              {result.unusual?.unusual && (
-                <span className="basis-full text-slate">
-                  "Unusual" means this profile is atypical for the book (from an anomaly model). Applications
-                  flagged this way default about 3x more often, so take a closer look. It is a prompt, not a verdict.
-                </span>
-              )}
-            </div>
-          )}
-
-          {isManager && result.shap.length > 0 && <div className="mt-6"><ScoreDrivers shap={result.shap} /></div>}
-
-          <h2 className="mt-6 text-sm font-semibold text-ink">
-            {result.shap.length > 0 ? "In plain language" : "Why this score"}
-          </h2>
-          <div className="mt-2">
-            {result.reasons.length > 0 ? (
-              <ReasonList
-                band={result.band}
-                items={result.reasons.map((r) => ({
-                  key: r.label, label: r.label, direction: r.direction, kind: r.kind, text: r.detail,
-                }))}
-              />
-            ) : (
-              <p className="py-2.5 text-sm text-slate">No strong factors either way.</p>
-            )}
-          </div>
-
-          {result.recommendations.length > 0 && (
-            <>
-              <h2 className="mt-6 text-sm font-semibold text-ink">What you could do</h2>
-              <ul className="mt-2 space-y-1.5 text-sm text-ink">
-                {result.recommendations.map((r) => (
-                  <li key={r} className="flex gap-2">
-                    <span className="text-accent-600">&rarr;</span>
-                    <span>{r}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-2 text-xs text-slate">Suggestions to help you decide, not a decision.</p>
-            </>
-          )}
-        </section>
-      </div>
+      <RiskStoryCard
+        score={result.risk_score}
+        band={result.band}
+        raisedByFlags={result.reasons.some((r) => r.label.startsWith("Risk level raised"))}
+        lead={result.brief}
+        reasons={result.reasons.map((r) => ({
+          key: r.label, label: r.label, direction: r.direction, kind: r.kind, text: r.detail,
+        }))}
+        shap={result.shap}
+        flags={result.flags}
+        recommendations={result.recommendations}
+        unusual={result.unusual?.unusual}
+        isManager={isManager}
+        source={result.source}
+      />
 
       {/* Guarantor fix-it advisor (Medium/High loans) */}
       {suggest && suggest.suggestions.length > 0 && (

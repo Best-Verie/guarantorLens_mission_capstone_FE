@@ -50,21 +50,38 @@ export default function Monitoring() {
 
       {surv && (
         <section className="mt-5 rounded-xl border border-line bg-white p-5">
-          <h2 className="text-sm font-semibold text-ink">How long loans last (survival analysis)</h2>
-          <p className="mt-1 text-sm text-slate">
-            Share of loans still performing as months pass (Kaplan-Meier). About{" "}
+          <h2 className="text-sm font-semibold text-ink">How long loans keep being paid (survival analysis)</h2>
+          <p className="mt-1 max-w-2xl text-sm text-slate">
+            This shows how long loans usually keep being paid before a few go bad, month by month. It is less about
+            "will this one loan go bad?" and more about "<span className="text-ink">how long do loans normally last,
+            and when do problems tend to start?</span>" About{" "}
             <span className="font-medium text-ink">
               {Math.round((surv.summary.find((s) => s.group === "all")?.s24 ?? 1) * 100)}%
             </span>{" "}
-            are still performing at 24 months; larger loans dip soonest.
+            of loans are still being paid on time after 2 years, and bigger loans start slipping soonest.
           </p>
           <div className="mt-3 max-w-2xl"><SurvivalChart data={surv} /></div>
-          <p className="mt-2 max-w-2xl text-xs text-slate">
-            How to read it: each line starts at 100% (every loan still performing) and steps down a little
-            each time a loan is written off. At any month, the height is the share of loans that have lasted
-            that long without being written off. A line that sits lower is riskier. We show the first 24
-            months, where loans from every part of the book are represented.
-          </p>
+          <div className="mt-3 max-w-2xl space-y-1.5 text-xs text-slate">
+            <p>
+              <span className="font-medium text-ink">Reading it.</span> Each line starts at 100% — on day one every
+              loan is being paid — and drops a little each time a loan in that group goes bad. The higher the line, the
+              more loans are still being paid. A line lower down means more of those loans went bad.
+            </p>
+            <p>
+              <span className="font-medium text-ink">It is not a failure rate.</span> Loans that are fully repaid, or
+              still being paid on time, are not counted as bad here. So the line is the share still doing fine, not the
+              share that failed.
+            </p>
+            <p>
+              <span className="font-medium text-ink">Why it stops at 2 years.</span> Every loan in the book has had at
+              least that long to show how it is doing, so the groups can be compared fairly. Further out, only a few
+              older loans are left and the line gets jumpy.
+            </p>
+            <p>
+              <span className="font-medium text-ink">What to do.</span> Big loans slip earliest, so keep the closest
+              eye on new big loans in their first months.
+            </p>
+          </div>
         </section>
       )}
 

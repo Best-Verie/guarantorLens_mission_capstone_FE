@@ -3,6 +3,7 @@ import { Logo } from "../components/brand/Logo";
 import { Button } from "../components/ui/Button";
 import { ScoreGauge } from "../components/app/ScoreGauge";
 import { getUser } from "../lib/session";
+import { redactIds } from "../lib/redact";
 import type { AssessInput, AssessResult } from "../api/risk";
 
 /** Print-friendly one-page report. Use the browser's "Save as PDF" to export. */
@@ -46,8 +47,8 @@ export default function AssessReport() {
         </div>
 
         <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
-          Internal SACCO document, for the loan officer and credit manager. Do not share with the applicant:
-          it contains guarantor details. The applicant receives a separate summary by email.
+          Internal SACCO decision-support document — confidential, keep within the SACCO. Individual
+          guarantors are not named. The applicant receives their own plain-language summary by email.
         </div>
 
         <div className="mt-6 flex items-center gap-6">
@@ -82,7 +83,7 @@ export default function AssessReport() {
                 <span className="font-semibold">
                   {r.direction === "up" ? "Raises risk" : "Lowers risk"}:
                 </span>{" "}
-                {r.label} ({r.kind}). {r.detail}
+                {r.label} ({r.kind}). {redactIds(r.detail)}
               </li>
             ))
           ) : (
@@ -108,7 +109,7 @@ export default function AssessReport() {
             <tr>
               <td className="py-1.5 text-slate">Guarantors</td>
               <td className="py-1.5 text-right font-mono text-ink">
-                {input.guarantor_ids.join(", ") || "none"}
+                {input.guarantor_ids.length || "none"}
               </td>
             </tr>
           </tbody>

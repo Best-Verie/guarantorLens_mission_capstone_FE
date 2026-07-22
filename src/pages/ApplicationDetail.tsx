@@ -3,10 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/app/AppShell";
 import { Button } from "../components/ui/Button";
 import { Alert } from "../components/ui/Alert";
-import { ScoreGauge } from "../components/app/ScoreGauge";
-import { ScoreDrivers } from "../components/app/ScoreDrivers";
+import { RiskStoryCard } from "../components/app/RiskStoryCard";
 import { SuggestionsTable } from "../components/app/SuggestionsTable";
-import { ReasonList } from "../components/app/ReasonList";
 import {
   getApplication, escalateApplication, addRecommendation,
 } from "../api/applications";
@@ -116,7 +114,6 @@ export default function ApplicationDetail() {
   const [wfOv, setWfOv] = useState<Record<string, { savings?: string; salary?: string; loans_backed?: string }>>({});
   const [wf, setWf] = useState<AssessResult | null>(null);
   const [wfBusy, setWfBusy] = useState(false);
-  const [explainTab, setExplainTab] = useState<"drivers" | "plain" | "todo">("plain");
   const [suggest, setSuggest] = useState<SuggestResult | null>(null);
   const [clientEmail, setClientEmail] = useState("");
 
@@ -277,71 +274,34 @@ export default function ApplicationDetail() {
 
         {error && <div className="mt-4"><Alert tone="error">{error}</Alert></div>}
 
-        {brief && (
-          <div className="mt-4 rounded-lg border-l-4 border-brand bg-brand-50/60 px-4 py-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-brand">Officer brief</h2>
-            <p className="mt-1 text-sm leading-relaxed text-ink">{brief}</p>
+        {/* Assessment result as a plain risk story (verdict, reasons, next step; drivers on demand) */}
+        {app.risk_score != null && app.band && (
+          <div className="mt-6">
+            <RiskStoryCard
+              score={app.risk_score}
+              band={app.band}
+              raisedByFlags={app.reasons.some((r) => r.label.startsWith("Risk level raised"))}
+              lead={brief || undefined}
+              reasons={drivers.map((d) => ({
+                key: d.feature,
+                label: d.label,
+                direction: d.direction,
+                kind: d.kind,
+                text: d.plain ?? (d.direction === "up" ? "raises the risk." : "lowers the risk."),
+              }))}
+              shap={drivers}
+              flags={app.flags}
+              recommendations={recommendations}
+              unusual={app.unusual?.unusual}
+              isManager={isManager}
+              source={app.source === "model" ? "model" : "heuristic"}
+            />
           </div>
         )}
 
-        {/* Result + what-if side by side */}
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          {/* Assessment result */}
-          <section className="rounded-xl border border-line bg-white p-5">
-            <div className="flex items-center gap-5">
-              {app.risk_score != null && app.band && (
-                <ScoreGauge score={app.risk_score} band={app.band} />
-              )}
-              <div>
-                <h2 className="text-lg font-bold text-ink">{app.band} risk</h2>
-                {app.reasons.some((r) => r.label.startsWith("Risk level raised")) && (
-                  <p className="mt-0.5 text-xs font-medium text-red-600">
-                    Raised to {app.band} by guarantor-network flags (see the reasons below)
-                  </p>
-                )}
-                <p className="mt-1 text-sm text-slate">
-                  {app.guarantor_ids.length} guarantor(s) · loan {rwf(app.amount)} · savings {rwf(app.savings)}
-                </p>
-                <p className="mt-1 text-xs text-slate">Score source: {app.source === "model" ? "model" : "rule-based fallback"}</p>
-              </div>
-            </div>
-            {app.flags.length > 0 && (
-              <>
-                <h3 className="mt-5 text-sm font-semibold text-ink">Flags</h3>
-                <ul className="mt-1 list-disc pl-5 text-sm text-ink">
-                  {app.flags.map((f) => <li key={f}>{f}</li>)}
-                </ul>
-              </>
-            )}
-            {(app.unusual?.unusual || app.segment) && (
-              <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-line pt-4 text-xs">
-                {app.unusual?.unusual && (
-                  <span
-                    className="rounded-lg bg-amber-50 px-2.5 py-1 font-medium text-amber-700"
-                    title="Isolation Forest: this application's profile is unusual for the book. Unusual applications default about 3x more often on average, so it is worth a closer look."
-                  >
-                    Unusual application
-                  </span>
-                )}
-                {app.segment && (
-                  <span className="text-slate">
-                    Borrower segment: <span className="font-medium text-ink">{app.segment.description}</span>
-                    {app.segment.segment_write_off_rate != null && (
-                      <> &middot; this segment's write-off rate {(app.segment.segment_write_off_rate * 100).toFixed(1)}%</>
-                    )}
-                  </span>
-                )}
-                {app.unusual?.unusual && (
-                  <span className="basis-full text-slate">
-                    "Unusual" means this profile is atypical for the book (from an anomaly model). Applications
-                    flagged this way default about 3x more often, so take a closer look. It is a prompt, not a verdict.
-                  </span>
-                )}
-              </div>
-            )}
-          </section>
-
-          {/* What-if card (highlighted, sits next to the result) */}
+        {/* What-if simulator */}
+        <div className="mt-6">
+          {/* What-if card (highlighted) */}
           <section className="rounded-xl border-2 border-accent/40 bg-accent-50/40 p-5">
             <h2 className="text-sm font-semibold text-ink">Simulate a change (what-if)</h2>
             <p className="mt-1 text-sm text-slate">
@@ -470,65 +430,6 @@ export default function ApplicationDetail() {
             )}
           </section>
         </div>
-
-        {/* Consolidated explanation: Drivers / In plain language / What to do */}
-        {(() => {
-          // Plain language first (default), then the driver bars, then recommendations.
-          const available = [
-            drivers.length > 0 ? "plain" : null,
-            drivers.length > 0 && isManager ? "drivers" : null,   // technical SHAP tab: managers only
-            recommendations.length > 0 ? "todo" : null,
-          ].filter(Boolean) as ("drivers" | "plain" | "todo")[];
-          if (available.length === 0) return null;
-          const active = available.includes(explainTab) ? explainTab : available[0];
-          const TAB_LABEL = { drivers: "Drivers", plain: "In plain language", todo: "What to do" } as const;
-          return (
-            <section className="mt-6 rounded-xl border border-line bg-white p-5">
-              <div className="mb-4 inline-flex rounded-lg border border-line bg-slate-50 p-0.5">
-                {available.map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setExplainTab(t)}
-                    className={
-                      "rounded-md px-3 py-1.5 text-sm font-medium transition " +
-                      (active === t ? "bg-white text-ink shadow-sm" : "text-slate hover:text-ink")
-                    }
-                  >
-                    {TAB_LABEL[t]}
-                  </button>
-                ))}
-              </div>
-
-              {active === "drivers" && <ScoreDrivers shap={drivers} />}
-
-              {active === "plain" && (
-                <ReasonList
-                  band={app.band ?? undefined}
-                  items={drivers.map((d) => ({
-                    key: d.feature,
-                    label: d.label,
-                    direction: d.direction,
-                    kind: d.kind,
-                    text: d.plain ?? (d.direction === "up" ? "raises the risk." : "lowers the risk."),
-                  }))}
-                />
-              )}
-
-              {active === "todo" && (
-                <>
-                  <ul className="space-y-1.5 text-sm text-ink">
-                    {recommendations.map((r) => (
-                      <li key={r} className="flex gap-2">
-                        <span className="text-accent-600">&rarr;</span><span>{r}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-3 text-xs text-slate">Suggestions to help you decide, not a decision.</p>
-                </>
-              )}
-            </section>
-          );
-        })()}
 
         {/* Guarantor fix-it advisor (Medium/High applications) */}
         {suggest && suggest.suggestions.length > 0 && (
