@@ -4,7 +4,6 @@ import { AppShell } from "../components/app/AppShell";
 import { Alert } from "../components/ui/Alert";
 import { getWatchlist, getEarlyWarning, getSurvival } from "../api/insights";
 import type { WatchlistItem, EarlyWarningItem, Survival } from "../api/insights";
-import { SurvivalChart } from "../components/app/SurvivalChart";
 import { ApiError } from "../api/http";
 import { getToken } from "../lib/session";
 
@@ -48,42 +47,37 @@ export default function Monitoring() {
         Active loans to keep an eye on: those predicted at risk before they go late, and those already overdue.
       </p>
 
-      {surv && (
-        <section className="mt-5 rounded-xl border border-line bg-white p-5">
-          <h2 className="text-sm font-semibold text-ink">How long loans keep being paid (survival analysis)</h2>
-          <p className="mt-1 max-w-2xl text-sm text-slate">
-            This shows how long loans usually keep being paid before a few go bad, month by month. It is less about
-            "will this one loan go bad?" and more about "<span className="text-ink">how long do loans normally last,
-            and when do problems tend to start?</span>" About{" "}
-            <span className="font-medium text-ink">
-              {Math.round((surv.summary.find((s) => s.group === "all")?.s24 ?? 1) * 100)}%
-            </span>{" "}
-            of loans are still being paid on time after 2 years, and bigger loans start slipping soonest.
-          </p>
-          <div className="mt-3 max-w-2xl"><SurvivalChart data={surv} /></div>
-          <div className="mt-3 max-w-2xl space-y-1.5 text-xs text-slate">
-            <p>
-              <span className="font-medium text-ink">Reading it.</span> Each line starts at 100% — on day one every
-              loan is being paid — and drops a little each time a loan in that group goes bad. The higher the line, the
-              more loans are still being paid. A line lower down means more of those loans went bad.
+      {surv && (() => {
+        const s24 = (g: string) => Math.round((surv.summary.find((s) => s.group === g)?.s24 ?? 1) * 100);
+        const all = s24("all"), large = s24("large");
+        return (
+          <section className="mt-5 rounded-xl border border-line bg-white p-5">
+            <h2 className="text-sm font-semibold text-ink">How loans age over time</h2>
+            <p className="mt-1 max-w-2xl text-sm text-slate">
+              A look at how long loans usually keep being paid before a few go bad — useful for spotting when
+              problems tend to start.
             </p>
-            <p>
-              <span className="font-medium text-ink">It is not a failure rate.</span> Loans that are fully repaid, or
-              still being paid on time, are not counted as bad here. So the line is the share still doing fine, not the
-              share that failed.
+            <div className="mt-4 grid max-w-2xl gap-3 sm:grid-cols-2">
+              <div className="rounded-lg bg-slate-50 p-4">
+                <p className="text-2xl font-semibold text-ink">{all}%</p>
+                <p className="mt-0.5 text-xs text-slate">of all loans are still being paid on time at the 2-year mark</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-4">
+                <p className="text-2xl font-semibold text-ink">{large}%</p>
+                <p className="mt-0.5 text-xs text-slate">for the biggest loans — they start slipping soonest</p>
+              </div>
+            </div>
+            <p className="mt-4 max-w-2xl text-sm text-ink">
+              <span className="font-medium">What this means:</span> most loans stay healthy for years, and the ones
+              that slip are usually the bigger loans, early in their life. Keep the closest eye on new large loans in
+              their first months.
             </p>
-            <p>
-              <span className="font-medium text-ink">Why it stops at 2 years.</span> Every loan in the book has had at
-              least that long to show how it is doing, so the groups can be compared fairly. Further out, only a few
-              older loans are left and the line gets jumpy.
+            <p className="mt-1 text-xs text-slate">
+              Based on a survival analysis of the loan book. The full month-by-month curve is in the model report.
             </p>
-            <p>
-              <span className="font-medium text-ink">What to do.</span> Big loans slip earliest, so keep the closest
-              eye on new big loans in their first months.
-            </p>
-          </div>
-        </section>
-      )}
+          </section>
+        );
+      })()}
 
       <div className="mt-5 inline-flex rounded-lg border border-line bg-white p-1">
         <button className={tabClass(tab === "early")} onClick={() => switchTab("early")}>
