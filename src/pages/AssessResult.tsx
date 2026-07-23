@@ -21,7 +21,7 @@ export default function AssessResult() {
   const role = getUser()?.role;
   const isManager = role === "credit_manager" || role === "admin";
   const rwf = (n?: number | null) =>
-    n == null ? "not on file" : "RWF " + Math.round(n).toLocaleString("en-US");
+    n == null ? "-" : "RWF " + Math.round(n).toLocaleString("en-US");
 
   // For a Medium/High loan, ask the advisor how to make it more bankable.
   const [suggest, setSuggest] = useState<SuggestResult | null>(null);

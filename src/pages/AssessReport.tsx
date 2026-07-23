@@ -21,7 +21,7 @@ export default function AssessReport() {
     day: "numeric",
   });
   const rwf = (n?: number | null) =>
-    n == null ? "not on file" : "RWF " + Math.round(n).toLocaleString("en-US");
+    n == null ? "-" : "RWF " + Math.round(n).toLocaleString("en-US");
 
   return (
     <div className="min-h-full bg-slate-100 py-8 print:bg-white print:py-0">

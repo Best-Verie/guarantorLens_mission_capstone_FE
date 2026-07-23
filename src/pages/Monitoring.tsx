@@ -73,7 +73,7 @@ export default function Monitoring() {
               their first months.
             </p>
             <p className="mt-1 text-xs text-slate">
-              Based on a survival analysis of the loan book. The full month-by-month curve is in the model report.
+              Based on a survival analysis.
             </p>
           </section>
         );

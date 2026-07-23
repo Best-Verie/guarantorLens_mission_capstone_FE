@@ -169,7 +169,7 @@ export default function Member() {
   }, [id, navigate]);
 
   const rwf = (n?: number | null) =>
-    n == null ? "Not on file" : "RWF " + Math.round(n).toLocaleString("en-US");
+    n == null ? "-" : "RWF " + Math.round(n).toLocaleString("en-US");
 
   // Per-backer attributes (loans backed, ever-defaulted) come from the ego-network nodes.
   const nodeById: Record<string, NetNode> = {};

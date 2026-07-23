@@ -21,7 +21,7 @@ export default function ApplicationReport() {
     getApplication(Number(id), token).then(setApp).catch(() => {});
   }, [id, navigate]);
 
-  const rwf = (n?: number | null) => (n == null ? "not on file" : "RWF " + Math.round(n).toLocaleString("en-US"));
+  const rwf = (n?: number | null) => (n == null ? "-" : "RWF " + Math.round(n).toLocaleString("en-US"));
   const today = new Date().toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
 
   if (!app) return <div className="p-10 text-sm text-slate">Loading report...</div>;
@@ -89,7 +89,7 @@ export default function ApplicationReport() {
             <tr><td className="py-1.5 text-slate">Amount</td><td className="py-1.5 text-right font-mono text-ink">{rwf(app.amount)}</td></tr>
             <tr><td className="py-1.5 text-slate">Savings</td><td className="py-1.5 text-right font-mono text-ink">{rwf(app.savings)}</td></tr>
             <tr><td className="py-1.5 text-slate">Salary</td><td className="py-1.5 text-right font-mono text-ink">{rwf(app.salary)}</td></tr>
-            <tr><td className="py-1.5 text-slate">Interest rate</td><td className="py-1.5 text-right font-mono text-ink">{app.interest_rate != null ? `${app.interest_rate}%` : "not on file"}</td></tr>
+            <tr><td className="py-1.5 text-slate">Interest rate</td><td className="py-1.5 text-right font-mono text-ink">{app.interest_rate != null ? `${app.interest_rate}%` : "-"}</td></tr>
             <tr><td className="py-1.5 text-slate">Guarantors</td><td className="py-1.5 text-right font-mono text-ink">{app.guarantor_ids.length || "none"}</td></tr>
           </tbody>
         </table>
